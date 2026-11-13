@@ -15,6 +15,7 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content="https://crecerdigital.github.io/spirit/icon-512.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin>
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
     <title>MUSA</title>
@@ -808,6 +809,7 @@
 .sp25code{background:#f0f0f0;border:1px solid #e4e4e4;border-radius:5px;padding:0 4px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
 .sp25pre{background:#f5f5f5;border:1px solid #e4e4e4;border-radius:8px;padding:8px 10px;overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;white-space:pre;margin:4px 0 8px}
 .sp25body a{color:#1f1f1f;text-decoration:underline}
+.sp4m{content-visibility:auto;contain-intrinsic-size:auto 64px}
 .sp25acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .sp25acts .sp4copy{margin-top:0}
 .sp25dots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
@@ -1873,7 +1875,7 @@ $("sp4savekey").addEventListener("click",function(){
 });
 var SP12DONE=false;
 async function sp12RefreshModels(key){
-  if(SP12DONE)return;SP12DONE=true;
+  /* v100-P1: el candado SP12DONE lo pone askGemini antes de llamar */
   var pref=["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash-001","gemini-2.0-flash"];
   try{
     var r=await fetch("https://generativelanguage.googleapis.com/v1beta/models",{headers:{"x-goog-api-key":key}});
@@ -1893,6 +1895,7 @@ function sp12Human(st){
   if(st===503||st===429)return "Gemini está saturado en este momento (su nivel gratis se llena). Espera un minuto y pregúntame de nuevo.";
   if(st===400||st===401||st===403)return "Google no aceptó la llave guardada. Pégala de nuevo en la tarjeta de arriba y toca Guardar.";
   if(st===-1||st===0)return "Sin conexión en este momento. Revisa tu señal e inténtalo de nuevo.";
+  if(st===451)return "Gemini bloqueó esa respuesta por sus filtros de seguridad. Reformula la pregunta e inténtalo de nuevo.";
   return "No pude responder en este momento. Inténtalo de nuevo en un minuto.";
 }
 function sp24Fetch(url,opts,ms){return new Promise(function(res,rej){var c=new AbortController();var t=setTimeout(function(){c.abort();},ms);var o={};for(var k in opts)o[k]=opts[k];o.signal=c.signal;fetch(url,o).then(function(r){clearTimeout(t);res(r);}).catch(function(e){clearTimeout(t);rej(e);});});}
@@ -1910,8 +1913,18 @@ async function askGemini(text){
   wd.appendChild(wst);wd.appendChild(dots);
   var near0=sp25Near(box);box.appendChild(wd);if(near0)box.scrollTop=1e7;else sp25ShowJump(true);
   function sp24Done(){var e=document.getElementById("sp24wait");if(e)e.remove();}
-  try{await Promise.race([sp12RefreshModels(key),new Promise(function(_,rej){setTimeout(function(){rej(new Error("t"));},8000);})]);}catch(e){}
+  /* v100-P1: no bloquear el primer token con ListModels; refresca en segundo plano */
+  if(!SP12DONE){SP12DONE=true;sp12RefreshModels(key);}
   var lastSt=0;
+  var tStart=Date.now();
+  async function sp100Wait(ms,why){
+    var end=Date.now()+ms;
+    while(Date.now()<end){
+      var left=Math.ceil((end-Date.now())/1000);
+      sp25SetStatus(why+" Reintento en "+left+" s…");
+      await sp25Sleep(Math.min(1000,Math.max(0,end-Date.now())));
+    }
+  }
   var delays=[1000,2000,4000],di=0;
   var maxM=Math.min(models.length,3);
   var SYS="Eres Gemini, asistente del equipo de Crecer Digital. Tu jefa es Muse. Respondes en español, directo, útil y breve salvo que pidan detalle.";
@@ -1919,7 +1932,18 @@ async function askGemini(text){
   for(var mi=0;mi<maxM;mi++){
     var nextModel=false;
     while(!nextModel){
-      var acc="",liveEl=null,liveBody=null,stallT=null;
+      var acc="",liveEl=null,liveBody=null,stallT=null,paintPend=false;
+      var finReason="";
+      function sp100Paint(){
+        paintPend=false;
+        if(!liveBody)return;
+        liveBody.textContent=acc;
+        if(sp25Near(box))box.scrollTop=1e7;else sp25ShowJump(true);
+      }
+      function sp100PaintSoon(){
+        if(paintPend)return;paintPend=true;
+        if(window.requestAnimationFrame)requestAnimationFrame(sp100Paint);else setTimeout(sp100Paint,16);
+      }
       try{
         sp25SetStatus(di>0?"Reintentando…":(mi>0?"Ese modelo se saturó, probando otro…":"Conectando…"));
         var ctrl=new AbortController();
@@ -1929,7 +1953,13 @@ async function askGemini(text){
         if(!r.ok){
           lastSt=r.status;
           if(stallT)clearTimeout(stallT);
-          if((r.status===429||r.status===503)&&di<delays.length){sp25SetStatus("Reintentando…");await sp25Sleep(delays[di++]);continue;}
+          if((r.status===429||r.status===503)&&di<delays.length&&(Date.now()-tStart)<60000){
+            var ra=parseInt(r.headers.get("Retry-After")||"0",10);
+            var waitMs=ra>0?Math.min(ra*1000,15000):delays[di];
+            di++;
+            await sp100Wait(waitMs,"Gemini saturado ("+models[mi]+").");
+            continue;
+          }
           nextModel=true;break;
         }
         sp25SetStatus("Gemini está escribiendo…");
@@ -1945,6 +1975,7 @@ async function askGemini(text){
             try{
               var o=JSON.parse(js);
               var ps=(o&&o.candidates&&o.candidates[0]&&o.candidates[0].content&&o.candidates[0].content.parts)||[];
+              var fr=o&&o.candidates&&o.candidates[0]&&o.candidates[0].finishReason;if(fr&&fr!=="STOP")finReason=fr;
               var add="";for(var pi=0;pi<ps.length;pi++)add+=ps[pi].text||"";
               if(!add)continue;
               acc+=add;
@@ -1956,25 +1987,30 @@ async function askGemini(text){
                 liveBody=document.createElement("div");liveBody.className="sp25body";
                 liveEl.appendChild(w);liveEl.appendChild(liveBody);box.appendChild(liveEl);
               }
-              liveBody.textContent=acc;
-              if(sp25Near(box))box.scrollTop=1e7;else sp25ShowJump(true);
+              sp100PaintSoon();
             }catch(e){}
           }
         };
         if(r.body&&typeof r.body.getReader==="function"){
           var reader=r.body.getReader();var dec=new TextDecoder();
           while(true){var rd=await reader.read();armStall();if(rd.done)break;if(rd.value)sp25Feed(dec.decode(rd.value,{stream:true}));}
+          /* v100-P3: vaciar el decoder y procesar la ultima linea sin \n final */
+          var tail=dec.decode();if(tail)sp25Feed(tail);
+          if(feedBuf&&feedBuf.replace(/^\s+|\s+$/g,""))sp25Feed("\n");
         }else{
           sp25Feed(await r.text());
         }
+        /* v100-P4: causa real del cierre */
+        if(finReason==="SAFETY"&&!acc){lastSt=451;nextModel=true;break;}
+        if(finReason==="MAX_TOKENS"&&acc)acc=acc+"\n\n⚠️ Respuesta cortada por longitud. Pídeme «sigue» y continúo.";
         if(stallT)clearTimeout(stallT);
         if(acc){if(liveEl)liveEl.remove();sp25Finish(acc);return;}
         lastSt=503;nextModel=true;
       }catch(e){
         if(stallT)clearTimeout(stallT);
-        if(acc){if(liveEl)liveEl.remove();sp25Finish(acc);return;}
+        if(acc){if(liveEl)liveEl.remove();sp25Finish(acc+"\n\n⚠️ La conexión se cortó: esto es lo que llegó. Toca Regenerar para pedirla completa.");return;}
         lastSt=(e&&e.name==="AbortError")?503:0;
-        if(di<delays.length){sp25SetStatus("Reintentando…");await sp25Sleep(delays[di++]);continue;}
+        if(di<delays.length&&(Date.now()-tStart)<60000){await sp100Wait(delays[di++],"Se cortó la conexión.");continue;}
         nextModel=true;
       }
     }
@@ -2159,7 +2195,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
 <script>
 /* MUSA · vigilante de versión: ninguna copia instalada se queda pegada en una versión vieja. */
 (function(){try{
-  var mine="v72";
+  var mine="v73";
   if(sessionStorage.getItem("spirit_watchdog_"+mine))return;
   fetch("index.html?rev="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
     var m=t.match(/<title>MUSA (v[0-9]+)<\/title>/);
