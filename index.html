@@ -18,7 +18,7 @@
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
     <title>MUSA</title>
-    <!-- <title>MUSA v71</title> -->
+    <!-- <title>MUSA v72</title> -->
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -391,7 +391,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v22</span>
+          MUSA
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -798,7 +798,7 @@
     </main>
 
     <style>
-/* MUSA v71 (sp25): streaming, markdown seguro, scroll inteligente, estados por etapas — blanco y gris, cero dorado */
+/* MUSA v72 (sp25): streaming, markdown seguro, scroll inteligente, estados por etapas — blanco y gris, cero dorado */
 .sp25body{display:block;white-space:normal}
 .sp25body>div{margin:0 0 6px}
 .sp25body>div:last-child{margin-bottom:0}
@@ -1786,7 +1786,7 @@ var gHist=load(LS_G,[]), tHist=load(LS_T,[]);
 var SP6AV={"Muse":"🌅 ","ChatGPT":"💬 ","Gemini":"✨ ","Equipo":"🌅 "};
 var SP8IMG={"Muse":"avatar-claude.png","ChatGPT":"avatar-chatgpt.png","Gemini":"avatar-gemini.png","Equipo":"avatar-claude.png"};
 function sp6speak(t){try{var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices();for(var i=0;i<vs.length;i++){if(vs[i].lang&&vs[i].lang.indexOf("es")===0){u.voice=vs[i];break;}}speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
-/* MUSA v71 (sp25): markdown sanitizado, scroll inteligente, estados por etapas, reintentos */
+/* MUSA v72 (sp25): markdown sanitizado, scroll inteligente, estados por etapas, reintentos */
 var sp25Busy=false;
 function sp25Esc(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function sp25md(src){
@@ -2154,12 +2154,12 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
   }catch(e){}
 })();
 </script>
-<!-- /MUSA v71 · Chat del equipo -->
+<!-- /MUSA v72 · Chat del equipo -->
 
 <script>
 /* MUSA · vigilante de versión: ninguna copia instalada se queda pegada en una versión vieja. */
 (function(){try{
-  var mine="v71";
+  var mine="v72";
   if(sessionStorage.getItem("spirit_watchdog_"+mine))return;
   fetch("index.html?rev="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
     var m=t.match(/<title>MUSA (v[0-9]+)<\/title>/);
