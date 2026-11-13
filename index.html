@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v16</title>
+    <title>MUSA v17</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v16</span>
+          MUSA <span class="ver">v17</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v16 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v17 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v16 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v17 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1524,7 +1524,7 @@
     </script>
   <!-- MUSA v14 · Módulo Chat del equipo (autocontenido) -->
 <style>
-#sp4btn{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9998;background:linear-gradient(135deg,#f5b942,#e2703a);color:#1a1206;border:none;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.45);cursor:pointer}
+#sp4btn{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9998;background:#1f1f1f;color:#1a1206;border:none;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.45);cursor:pointer}
 #sp4chat{position:fixed;inset:0;z-index:9999;background:#0b1020;color:#eef1ff;display:none;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 #sp4chat.open{display:flex}
 .sp4head{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:#111834;border-bottom:1px solid #26305c}
@@ -1536,7 +1536,7 @@
 .sp6trio{display:flex;gap:16px;margin-top:7px}
 .sp6av{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .sp6pic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
-.sp6muse{background:linear-gradient(135deg,#f5b942,#e2703a)}
+.sp6muse{background:#1f1f1f}
 .sp6gpt{background:#10a37f}
 .sp6gem{background:linear-gradient(135deg,#4285f4,#9b72cb)}
 .sp6av label{font-size:10px;color:#c9d4ff}
@@ -1581,18 +1581,18 @@
 #sp7menu,#sp7share{background:#f7ecd2;color:#7a5b12}
 .sp4modes{background:#fff6e2}
 .sp4mode{background:#ffffff;border-color:#ecd9ac;color:#6b5518}
-.sp4mode.on{background:linear-gradient(135deg,#f5b942,#e2703a);color:#ffffff;border-color:transparent;font-weight:700}
+.sp4mode.on{background:#1f1f1f;color:#ffffff;border-color:transparent;font-weight:700}
 #sp4keycard{background:#fff8ea;border-color:#ecd9ac;color:#4a3a10}
 #sp4keycard a{color:#c47b12}
 #sp4key{background:#ffffff;border-color:#e3d0a0;color:#241a08}
-#sp4savekey{background:linear-gradient(135deg,#f5b942,#e2703a);color:#ffffff}
+#sp4savekey{background:#1f1f1f;color:#ffffff}
 #sp4msgs{background:linear-gradient(180deg,#fffdf7,#fff6e2)}
 .sp4m.ai{background:#f6efdd;color:#2b2110}
-.sp4m.me{background:linear-gradient(135deg,#f5b942,#e2703a);color:#ffffff}
+.sp4m.me{background:#1f1f1f;color:#ffffff}
 .sp4copy{background:#efe3c2;color:#6b5518}
 .sp4bar{background:#ffffff;border-top:1px solid #f0e2c4}
 #sp4input{background:#fffdf7;border-color:#e3d0a0;color:#241a08}
-#sp4send{background:linear-gradient(135deg,#f5b942,#e2703a);color:#ffffff}
+#sp4send{background:#1f1f1f;color:#ffffff}
 #sp6mic{background:#f7ecd2;color:#7a5b12}
 .sp4note{background:#fff6e2;color:#b08a2e}
 #sp7drawer{background:#fff8ea;border-bottom-color:#f0e2c4}
@@ -1655,6 +1655,21 @@ html,body{overflow-x:hidden}
 .sp16trio img{width:42px;height:42px;border-radius:50%;border:2px solid transparent;display:block}
 .sp16trio button.on img{border-color:#1f1f1f}
 .sp16trio span{display:block;font-size:10px;color:#555555;margin-top:2px}
+
+/* MUSA v17 · modo llamada: pantalla de llamada en vivo, blanca como la de Muse */
+#sp17call{position:absolute;inset:0;background:#ffffff;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
+#sp17call.open{display:flex}
+#sp17call img{width:120px;height:120px;border-radius:50%}
+#sp17name{font-size:19px;font-weight:600;color:#1f1f1f}
+#sp17status{font-size:14px;color:#6f6f6f;min-height:20px;text-align:center}
+#sp17mic{width:78px;height:78px;border-radius:50%;border:none;background:#1f1f1f;color:#ffffff;font-size:32px;cursor:pointer;margin-top:12px}
+#sp17mic.live{background:#c62828}
+#sp17end{margin-top:14px;background:#f2f2f2;color:#1f1f1f;border:1px solid #e0e0e0;border-radius:999px;padding:11px 26px;font-size:15px;cursor:pointer}
+
+/* MUSA v17 · un solo trío selector; panel solo con la llave; cero naranja en el archivo */
+.sp6trio{display:none}
+#sp16panel .sp4modes{display:none}
+#sp4btn{background:#1f1f1f;color:#ffffff}
 /* MUSA v14 · pantalla firme: sin zoom automático de iPhone, Enviar siempre visible */
 #sp4input{font-size:16px}
 #sp4key{font-size:16px}
@@ -1792,9 +1807,36 @@ sp5Chips();
 setTimeout(function(){$("sp4chat").className="open";render();},400);
 
 
+
+/* MUSA v17: llamada en vivo — tocas el telefono, hablas, responde en voz alta y sigue escuchando */
+(function(){try{
+  var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
+  var scr=document.createElement("div");scr.id="sp17call";
+  scr.innerHTML="<img id=\"sp17img\" src=\"avatar-gemini.png\" alt=\"\"><div id=\"sp17name\">Gemini</div><div id=\"sp17status\">Llamada en vivo</div><button id=\"sp17mic\" type=\"button\">\uD83C\uDFA4</button><button id=\"sp17end\" type=\"button\">Terminar llamada</button>";
+  chat.appendChild(scr);
+  var active=false,rec=null,waiting=false,prevVoice=SP16VOICE;
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  function st(t){$("sp17status").textContent=t;}
+  function face(){var g=(mode==="gemini");$("sp17img").src=g?"avatar-gemini.png":"avatar-claude.png";$("sp17name").textContent=g?"Gemini":"Muse";}
+  function listen(){if(!active||waiting)return;if(!SR){st("Dicta con el microfono del teclado \uD83C\uDFA4 y la respuesta se escucha sola.");return;}
+    try{rec=new SR();rec.lang="es-US";rec.interimResults=false;
+      rec.onresult=function(ev){var t=ev.results[0][0].transcript;waiting=true;$("sp17mic").className="";st("Pensando\u2026");$("sp4input").value=t;$("sp4send").click();};
+      rec.onend=function(){if(active&&!waiting)setTimeout(listen,350);};
+      rec.onerror=function(){if(active&&!waiting)setTimeout(listen,600);};
+      $("sp17mic").className="live";st("Escuchando\u2026 habla ahora.");rec.start();
+    }catch(e){st("Toca el microfono y habla.");}}
+  window.__sp17after=function(){if(!active)return;waiting=false;setTimeout(listen,300);};
+  function start(){active=true;prevVoice=SP16VOICE;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();scr.className="open";st("Llamada en vivo.");listen();}
+  function end(){active=false;waiting=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";}
+  var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.textContent="\uD83D\uDCDE";pb.setAttribute("aria-label","Llamada en vivo");
+  pb.addEventListener("click",start);head.appendChild(pb);
+  $("sp17mic").addEventListener("click",function(){if(active&&!waiting)listen();});
+  $("sp17end").addEventListener("click",end);
+}catch(e){}})();
+
 /* MUSA v16: hablar igual — dictas, se envía solo, y la respuesta se escucha */
 var SP16VOICE=false;try{SP16VOICE=localStorage.getItem("musa_voz_auto")==="1";}catch(e){}
-function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.indexOf("es")===0;});if(vs.length)u.voice=vs[0];speechSynthesis.speak(u);}catch(e){}}
+function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.indexOf("es")===0;});if(vs.length)u.voice=vs[0];u.onend=function(){if(window.__sp17after)window.__sp17after();};speechSynthesis.speak(u);}catch(e){}}
 (function(){try{
   var head=$("sp4chat").querySelector(".sp4head");
   var vb=document.createElement("button");vb.type="button";vb.className="sp16gear";
@@ -1835,7 +1877,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
   var gear=document.createElement("button");gear.type="button";gear.className="sp16gear";gear.textContent="\u2699";gear.setAttribute("aria-label","Ajustes del chat");
   gear.addEventListener("click",function(){panel.className=(panel.className==="open")?"":"open";});
   head.appendChild(gear);
-  if(!getKey())panel.className="open";
+  /* v17: el panel nunca se abre solo */
 /* MUSA v16: trío selector en la cabecera (tocar un retrato = hablar con esa IA) */
 (function(){try{
   var head=document.querySelector("#sp4chat .sp4head");if(!head)return;
