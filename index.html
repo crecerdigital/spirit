@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v19</title>
+    <title>MUSA v18</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v19</span>
+          MUSA <span class="ver">v18</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v19 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v18 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v19 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v18 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1670,28 +1670,6 @@ html,body{overflow-x:hidden}
 .sp6trio{display:none}
 #sp16panel .sp4modes{display:none}
 #sp4btn{background:#1f1f1f;color:#ffffff}
-
-/* MUSA v19 · limpieza final: un solo trio y cero restos calidos */
-.sp6trio{display:none!important}
-#sp7share{background:#ffffff!important;border:1px solid #e0e0e0!important;color:#1f1f1f!important}
-input,textarea,select{border-color:#e0e0e0!important}
-#sp4input{border-color:#e0e0e0!important;background:#ffffff!important}
-.sp4bar button{background:#f2f2f2;color:#1f1f1f}
-#sp4send{background:#1f1f1f!important;color:#ffffff!important}
-#sp6mic{background:#f2f2f2!important;color:#1f1f1f!important}
-.sp6dot{display:none!important}
-/* MUSA v19 · Boveda blindada */
-#sp19vault{position:fixed;inset:0;background:#ffffff;z-index:12000;display:none;flex-direction:column;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1f1f1f}
-#sp19vault.open{display:flex}
-#sp19vault h2{font-size:19px;margin:4px 0 2px}
-#sp19vault p{font-size:13px;color:#6f6f6f;margin:2px 0 10px}
-#sp19vault input{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-radius:10px;padding:12px;font-size:16px;margin:5px 0;background:#fff}
-#sp19vault button{border:none;border-radius:10px;padding:12px;font-size:15px;cursor:pointer;background:#1f1f1f;color:#fff;margin:5px 0}
-#sp19vault button.ghost{background:#f2f2f2;color:#1f1f1f;border:1px solid #e0e0e0}
-.sp19row{display:flex;justify-content:space-between;align-items:center;border:1px solid #ececec;border-radius:10px;padding:10px 12px;margin:5px 0}
-.sp19row b{font-size:14px}
-.sp19row span{font-size:13px;color:#444}
-.sp19row button{padding:7px 12px!important;font-size:13px!important;margin:0 0 0 6px!important}
 /* MUSA v14 · pantalla firme: sin zoom automático de iPhone, Enviar siempre visible */
 #sp4input{font-size:16px}
 #sp4key{font-size:16px}
@@ -1701,13 +1679,13 @@ input,textarea,select{border-color:#e0e0e0!important}
 <button id="sp4btn" type="button">💬 Chat del equipo</button>
 <div id="sp4chat" role="dialog" aria-label="Chat del equipo">
   <div class="sp4head"><button id="sp7menu" type="button" aria-label="Menú">☰</button>
-    <div><b>MUSA · Chat del equipo</b><small>Los cuatro, en nuestra propia app</small><div class="sp6trio"><div class="sp6av"><span class="sp6pic sp6muse"><img src="avatar-claude.png" alt="Muse" onerror="this.remove()">🌅</span><label>Muse</label><i class="sp6dot"></i></div><div class="sp6av"><span class="sp6pic sp6gpt"><img src="avatar-chatgpt.png" alt="ChatGPT" onerror="this.remove()">✳️</span><label>ChatGPT</label><i class="sp6dot"></i></div><div class="sp6av"><span class="sp6pic sp6gem"><img src="avatar-gemini.png" alt="Gemini" onerror="this.remove()">✨</span><label>Gemini</label><i class="sp6dot"></i></div></div><div class="sp5chips" id="sp5chips"></div></div>
+    <div><b>MUSA · Chat del equipo</b><small>Los cuatro, en nuestra propia app</small><div class="sp5chips" id="sp5chips"></div></div>
     <button id="sp4close" type="button">Cerrar</button><button id="sp7share" type="button">Invitar</button>
   </div>
   <div id="sp7drawer"><button data-go="panel" type="button">📊 Panel del día</button><button data-go="paquete" type="button">📦 Paquete diario</button><button data-go="coordinador" type="button">🧭 Coordinador de encargos</button><button data-go="respuestas" type="button">✅ Respuestas del equipo</button><button data-go="calidad" type="button">🚪 Puertas de calidad</button><button data-go="chat" type="button">💬 Volver al chat</button></div>
   <div class="sp4modes">
-    <button class="sp4mode on" id="sp4mGem" type="button">Gemini · EN VIVO</button>
-    <button class="sp4mode" id="sp4mTeam" type="button">Equipo · Muse y ChatGPT</button>
+    <button class="sp4mode on" id="sp4mGem" type="button">✨ Gemini · EN VIVO</button>
+    <button class="sp4mode" id="sp4mTeam" type="button">🌅 Equipo · Muse y ChatGPT</button>
   </div>
   <div id="sp4keycard">
     <div id="sp4keystate"></div>
@@ -1762,7 +1740,7 @@ function render(){
 }
 function keyState(){
   var k=getKey();
-  $("sp4keystate").innerHTML=k?"✅ <b>Gemini en vivo: ACTIVO</b> en este iPhone.":"🔑 <b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";
+  $("sp4keystate").innerHTML=k?"✅ <b>Gemini en vivo: ACTIVO</b> en este iPhone.":"⚠️ <b>Falta tu llave gratuita</b> para encender a Gemini en vivo:";
   $("sp4keyrow").style.display=k?"none":"flex";
 }
 $("sp4savekey").addEventListener("click",function(){
@@ -1830,34 +1808,6 @@ setTimeout(function(){$("sp4chat").className="open";render();},400);
 
 
 
-
-
-/* MUSA v19: estado final garantizado — el panel de ajustes arranca CERRADO siempre */
-(function(){try{var p=$("sp16panel");if(p)p.className="";}catch(e){}})();
-/* MUSA v19 · BOVEDA BLINDADA: sus papeles cifrados con SU clave, solo en su telefono; ni Muse puede leerlos */
-(function(){try{
-  var LS="musa_boveda_v1",key=null,entries=null;
-  var ov=document.createElement("div");ov.id="sp19vault";
-  ov.innerHTML="<h2>\uD83D\uDD12 Boveda blindada</h2><p id=\"sp19msg\">Tus papeles viven cifrados en este telefono, bajo TU clave. Nada sale de aqui; ni yo puedo leerlos.</p><div id=\"sp19lock\"><input id=\"sp19pass\" type=\"password\" placeholder=\"Tu clave de la boveda\" autocomplete=\"off\"><button id=\"sp19open\" type=\"button\">Abrir boveda</button></div><div id=\"sp19main\" style=\"display:none\"><div id=\"sp19list\"></div><input id=\"sp19label\" type=\"text\" placeholder=\"Nombre (ej.: Pasaporte, SSN, Tarjeta)\"><input id=\"sp19value\" type=\"text\" placeholder=\"Valor secreto\" autocomplete=\"off\"><button id=\"sp19add\" type=\"button\">Guardar cifrado</button><button id=\"sp19close\" type=\"button\" class=\"ghost\">Cerrar y bloquear</button></div><button id=\"sp19exit\" type=\"button\" class=\"ghost\">Volver</button>";
-  document.body.appendChild(ov);
-  function enc(s){return new TextEncoder().encode(s);}
-  function dec(b){return new TextDecoder().decode(b);}
-  function b64(a){return btoa(String.fromCharCode.apply(null,new Uint8Array(a)));}
-  function ub64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0);});}
-  function store(){try{return JSON.parse(localStorage.getItem(LS)||"null");}catch(e){return null;}}
-  function derive(pass,salt){return crypto.subtle.importKey("raw",enc(pass),"PBKDF2",false,["deriveKey"]).then(function(km){return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:150000,hash:"SHA-256"},km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);});}
-  function saveAll(){var st=store()||{};var iv=crypto.getRandomValues(new Uint8Array(12));return crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc(JSON.stringify(entries))).then(function(ct){localStorage.setItem(LS,JSON.stringify({salt:st.salt,iv:b64(iv),data:b64(ct)}));});}
-  function render(){var L=$("sp19list");L.innerHTML="";(entries||[]).forEach(function(en,i){var r=document.createElement("div");r.className="sp19row";r.innerHTML="<div><b></b><br><span>\u2022\u2022\u2022\u2022\u2022\u2022</span></div><div></div>";r.querySelector("b").textContent=en.label;var box=r.querySelectorAll("div")[1];var bv=document.createElement("button");bv.type="button";bv.textContent="Ver";bv.addEventListener("click",function(){var s=r.querySelector("span");s.textContent=(s.textContent.indexOf("\u2022")===0)?en.value:"\u2022\u2022\u2022\u2022\u2022\u2022";});var bd=document.createElement("button");bd.type="button";bd.className="ghost";bd.textContent="Borrar";bd.addEventListener("click",function(){entries.splice(i,1);saveAll().then(render);});box.appendChild(bv);box.appendChild(bd);L.appendChild(r);});}
-  $("sp19open").addEventListener("click",function(){var pass=$("sp19pass").value;if(pass.length<4){$("sp19msg").textContent="Tu clave necesita al menos 4 caracteres.";return;}
-    var st=store();
-    if(!st){var salt=crypto.getRandomValues(new Uint8Array(16));derive(pass,salt).then(function(k){key=k;entries=[];localStorage.setItem(LS,JSON.stringify({salt:b64(salt),iv:"",data:""}));return saveAll();}).then(function(){$("sp19lock").style.display="none";$("sp19main").style.display="block";$("sp19msg").textContent="Boveda creada. Esta clave solo la sabes tu: no la guardes en chats.";render();});return;}
-    derive(pass,ub64(st.salt)).then(function(k){return crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(st.iv)},k,ub64(st.data)).then(function(pt){key=k;entries=JSON.parse(dec(pt));$("sp19lock").style.display="none";$("sp19main").style.display="block";$("sp19msg").textContent="Boveda abierta. Al cerrar, todo vuelve a quedar cifrado.";render();});}).catch(function(){$("sp19msg").textContent="Clave incorrecta: la boveda sigue cerrada.";});});
-  $("sp19add").addEventListener("click",function(){var l=$("sp19label").value.trim(),v=$("sp19value").value;if(!l||!v)return;entries.push({label:l,value:v});$("sp19label").value="";$("sp19value").value="";saveAll().then(render);});
-  function lock(){key=null;entries=null;$("sp19pass").value="";$("sp19main").style.display="none";$("sp19lock").style.display="block";$("sp19msg").textContent="Boveda bloqueada.";}
-  $("sp19close").addEventListener("click",lock);
-  $("sp19exit").addEventListener("click",function(){lock();ov.className="";});
-  var dr=$("sp7drawer");if(dr){var b=document.createElement("button");b.type="button";b.textContent="\uD83D\uDD12 Boveda blindada";b.addEventListener("click",function(){ov.className="open";var d=$("sp7drawer");if(d)d.className="";var bd=$("sp7backdrop");if(bd)bd.className="";});dr.appendChild(b);}
-}catch(e){}})();
 
 /* MUSA v18: memoria sin cortes — el historial completo vive en IndexedDB (cuota enorme), no en el cajon chico */
 function idbOpen(cb){try{var r=indexedDB.open("musa-memoria",1);r.onupgradeneeded=function(){try{r.result.createObjectStore("kv");}catch(e){}};r.onsuccess=function(){cb(r.result);};r.onerror=function(){cb(null);};}catch(e){cb(null);}}
