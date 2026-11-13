@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v21</title>
+    <title>MUSA v22</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v21</span>
+          MUSA <span class="ver">v22</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v21 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v22 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v21 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v22 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1983,6 +1983,26 @@ $("sp7menu").addEventListener("click",function(){var d=$("sp7drawer");d.classNam
 $("sp7share").addEventListener("click",function(){var u="https://crecerdigital.github.io/spirit-ia/";if(navigator.share){navigator.share({title:"MUSA",url:u}).catch(function(){});}else{copyText(u);alert("Enlace de MUSA copiado: "+u);}});
 Array.prototype.forEach.call(document.querySelectorAll("#sp7drawer button"),function(b){b.addEventListener("click",function(){var go=b.getAttribute("data-go");$("sp7drawer").className="";if(go==="chat")return;$("sp4chat").className="";setTimeout(function(){var s=document.getElementById(go);if(s)s.scrollIntoView({behavior:"smooth"});},60);});});
 $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("En esta vista, usa el micrófono de tu teclado: toca el campo de texto y luego el 🎤 del teclado.");return;}try{var r=new SR();r.lang="es-US";r.interimResults=false;r.onresult=function(ev){var t=ev.results[0][0].transcript;$("sp4input").value=($("sp4input").value+" "+t).trim();$("sp4send").click();};r.start();}catch(e){alert("No pude abrir el micrófono aquí; usa el 🎤 del teclado.");}});
+})();
+
+/* MUSA v22: barrido — llamada y voz fuera de la cabecera, tras el engranaje */
+(function(){
+  function sweep(){
+    try{
+      var head=document.querySelector("#sp4chat .sp4head"),panel=document.getElementById("sp16panel");
+      if(!head||!panel)return;
+      Array.prototype.slice.call(head.querySelectorAll("button")).forEach(function(b){
+        var al=b.getAttribute("aria-label")||"",tx=b.textContent||"";
+        if(al==="Llamada en vivo"||al==="Voz autom\u00e1tica"||tx.indexOf("\uD83D\uDCDE")>=0||tx.indexOf("\uD83D\uDD0A")>=0){panel.appendChild(b);}
+      });
+    }catch(e){}
+  }
+  sweep();
+  [300,1000,2500,5000].forEach(function(t){setTimeout(sweep,t);});
+  try{
+    var head=document.querySelector("#sp4chat .sp4head");
+    if(head&&window.MutationObserver){var mo=new MutationObserver(sweep);mo.observe(head,{childList:true});setTimeout(function(){mo.disconnect();},10000);}
+  }catch(e){}
 })();
 </script>
 <!-- /MUSA v14 · Chat del equipo -->
