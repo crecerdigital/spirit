@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v20</title>
+    <title>MUSA v21</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v20</span>
+          MUSA <span class="ver">v21</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v20 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v21 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v20 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v21 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1521,7 +1521,18 @@
         }
         renderAll();
       })();
-    </script>
+    
+/* MUSA v21: los botones de llamada y voz viven tras el engranaje; la cabecera queda como la de Muse */
+(function(){try{
+  var head=document.querySelector("#sp4chat .sp4head"),panel=document.getElementById("sp16panel");
+  if(!head||!panel)return;
+  Array.prototype.slice.call(head.querySelectorAll("button")).forEach(function(b){
+    if(b.id==="sp7menu"||b.id==="sp4close"||b.id==="sp7share")return;
+    if(b.getAttribute("aria-label")==="Ajustes del chat")return;
+    panel.appendChild(b);
+  });
+}catch(e){}})();
+</script>
   <!-- MUSA v14 · Módulo Chat del equipo (autocontenido) -->
 <style>
 #sp4btn{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9998;background:#1f1f1f;color:#1a1206;border:none;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.45);cursor:pointer}
