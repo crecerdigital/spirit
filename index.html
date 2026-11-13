@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v19</title>
+    <title>MUSA v20</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v19</span>
+          MUSA <span class="ver">v20</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v19 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v20 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v19 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v20 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1697,6 +1697,15 @@ input,textarea,select{border-color:#e0e0e0!important}
 #sp4key{font-size:16px}
 #sp4chat{height:100dvh}
 .sp4bar{position:sticky;bottom:0}
+
+/* MUSA v20 · CIERRE FINAL: blanco y gris en toda la cabecera, sin excepciones */
+#sp7menu{background:#ffffff!important;color:#1f1f1f!important;border:1px solid #e6e6e6!important}
+#sp7drawer{background:#ffffff!important}
+#sp7drawer button{background:#ffffff!important;border-color:#ececec!important;color:#1f1f1f!important}
+#sp4keycard{background:#ffffff!important;border-color:#e6e6e6!important;color:#333333!important}
+#sp16panel{background:#ffffff!important}
+.sp4head{background:#ffffff!important}
+#sp4close{background:#f2f2f2!important;color:#1f1f1f!important;border:1px solid #e6e6e6!important}
 </style>
 <button id="sp4btn" type="button">💬 Chat del equipo</button>
 <div id="sp4chat" role="dialog" aria-label="Chat del equipo">
@@ -1838,7 +1847,7 @@ setTimeout(function(){$("sp4chat").className="open";render();},400);
 (function(){try{
   var LS="musa_boveda_v1",key=null,entries=null;
   var ov=document.createElement("div");ov.id="sp19vault";
-  ov.innerHTML="<h2>\uD83D\uDD12 Boveda blindada</h2><p id=\"sp19msg\">Tus papeles viven cifrados en este telefono, bajo TU clave. Nada sale de aqui; ni yo puedo leerlos.</p><div id=\"sp19lock\"><input id=\"sp19pass\" type=\"password\" placeholder=\"Tu clave de la boveda\" autocomplete=\"off\"><button id=\"sp19open\" type=\"button\">Abrir boveda</button></div><div id=\"sp19main\" style=\"display:none\"><div id=\"sp19list\"></div><input id=\"sp19label\" type=\"text\" placeholder=\"Nombre (ej.: Pasaporte, SSN, Tarjeta)\"><input id=\"sp19value\" type=\"text\" placeholder=\"Valor secreto\" autocomplete=\"off\"><button id=\"sp19add\" type=\"button\">Guardar cifrado</button><button id=\"sp19close\" type=\"button\" class=\"ghost\">Cerrar y bloquear</button></div><button id=\"sp19exit\" type=\"button\" class=\"ghost\">Volver</button>";
+  ov.innerHTML="<h2>\uD83D\uDD12 Boveda blindada</h2><p id=\"sp19msg\">Tus papeles viven cifrados en este telefono, bajo TU clave. Nada sale de aqui; ni yo puedo leerlos.</p><div id=\"sp19lock\"><input id=\"sp19pass\" type=\"password\" placeholder=\"Tu clave de la boveda\" autocomplete=\"off\"><button id=\"sp19open\" type=\"button\">Crear o abrir boveda</button></div><div id=\"sp19main\" style=\"display:none\"><div id=\"sp19list\"></div><input id=\"sp19label\" type=\"text\" placeholder=\"Nombre (ej.: Pasaporte, SSN, Tarjeta)\"><input id=\"sp19value\" type=\"text\" placeholder=\"Valor secreto\" autocomplete=\"off\"><button id=\"sp19add\" type=\"button\">Guardar cifrado</button><button id=\"sp19close\" type=\"button\" class=\"ghost\">Cerrar y bloquear</button></div><button id=\"sp19exit\" type=\"button\" class=\"ghost\">Volver</button>";
   document.body.appendChild(ov);
   function enc(s){return new TextEncoder().encode(s);}
   function dec(b){return new TextDecoder().decode(b);}
@@ -1876,6 +1885,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T){idbSet(k,v);try{localStorage.remov
 /* MUSA v17: llamada en vivo — tocas el telefono, hablas, responde en voz alta y sigue escuchando */
 (function(){try{
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
+  if(chat.parentNode!==document.body)document.body.appendChild(chat); /* v20: el chat cubre TODA la pantalla, como en Muse */
   var scr=document.createElement("div");scr.id="sp17call";
   scr.innerHTML="<img id=\"sp17img\" src=\"avatar-gemini.png\" alt=\"\"><div id=\"sp17name\">Gemini</div><div id=\"sp17status\">Llamada en vivo</div><button id=\"sp17mic\" type=\"button\">\uD83C\uDFA4</button><button id=\"sp17end\" type=\"button\">Terminar llamada</button>";
   chat.appendChild(scr);
@@ -1982,6 +1992,12 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
     }
   }).catch(function(){});
 }catch(e){}})();
+</script>
+
+<script>
+/* MUSA v20: un solo trio de retratos en la cabecera del chat */
+(function(){function one(){try{var head=document.querySelector("#sp4chat .sp4head");if(!head)return;var t=head.querySelectorAll(".sp16trio");for(var i=1;i<t.length;i++){t[i].remove();}var o=head.querySelectorAll(".sp6trio");for(var j=0;j<o.length;j++){o[j].remove();}}catch(e){}}
+one();setTimeout(one,700);setTimeout(one,2000);setTimeout(one,4500);})();
 </script>
 </body>
 </html>
