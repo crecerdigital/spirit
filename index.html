@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v15</title>
+    <title>MUSA v16</title>
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -386,7 +386,7 @@
           <span class="sigil" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="3.2"/></svg>
           </span>
-          MUSA <span class="ver">v15</span>
+          MUSA <span class="ver">v16</span>
         </div>
         <nav class="mainnav" aria-label="Secciones">
           <a href="#panel">Panel</a>
@@ -407,7 +407,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v15 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v16 · Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +787,7 @@
       </section>
 
       <footer>
-        <span>MUSA v15 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA v16 · Consola diaria privada de Crecer Digital</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -1613,6 +1613,42 @@ html,body{overflow-x:hidden}
 #sp4input{min-width:0;border-radius:999px;padding:12px 16px;box-shadow:0 2px 10px rgba(190,140,40,.12)}
 #sp4send{border-radius:50%;width:44px;height:44px;flex:0 0 44px;padding:0}
 #sp6mic{border-radius:50%;width:44px;height:44px;flex:0 0 44px;padding:0}
+
+/* MUSA v16 · pantalla Muse: blanco puro, texto gris oscuro, CERO naranja ni dorado */
+#sp4chat{background:#ffffff;color:#1f1f1f}
+.sp4head{background:#ffffff;border-bottom:1px solid #ececec;box-shadow:none}
+.sp4head b{color:#1f1f1f}
+.sp4head small{color:#6f6f6f}
+.sp8who{color:#6f6f6f}
+.sp4m.ai{background:transparent;color:#1f1f1f}
+.sp4m.me{background:#f2f2f2;color:#1f1f1f}
+.sp4copy{background:#f2f2f2;color:#333333}
+.sp4note{display:none}
+.sp4bar{background:#ffffff;border-top:1px solid #ececec}
+#sp4send{background:#1f1f1f;color:#ffffff}
+#sp6mic{background:#f2f2f2}
+.sp4modes{background:#ffffff;border-bottom:1px solid #ececec}
+.sp4mode{background:#ffffff;border:1px solid #e0e0e0;color:#444444}
+.sp4mode.on{background:#1f1f1f;color:#ffffff;border-color:#1f1f1f;font-weight:600}
+#sp4keycard{background:#ffffff;border:1px solid #e6e6e6;color:#333333;box-shadow:none}
+#sp4keycard a{color:#1f1f1f}
+#sp4keystate{color:#444444}
+#sp4savekey{background:#1f1f1f;color:#ffffff}
+.sp5team{color:#6f6f6f}
+.sp6av label{color:#555555}
+.sp5chips span{background:#f2f2f2;color:#333333;border:1px solid #e6e6e6}
+#sp16panel{display:none;background:#ffffff;border-bottom:1px solid #ececec;padding:4px 0 8px}
+#sp16panel.open{display:block}
+#sp16panel #sp4keycard{margin:8px 12px}
+#sp16panel .sp4modes{border-bottom:none}
+.sp16gear{background:none;border:none;font-size:19px;color:#444444;padding:6px 8px;cursor:pointer;line-height:1}
+
+.sp4head b,.sp4head small{display:none}
+.sp16trio{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex:1}
+.sp16trio button{background:none;border:none;padding:0;text-align:center;cursor:pointer}
+.sp16trio img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid transparent;padding:1px}
+.sp16trio button.on img{border-color:#1f1f1f}
+.sp16trio span{display:block;font-size:10px;color:#555555;margin-top:2px}
 /* MUSA v14 · pantalla firme: sin zoom automático de iPhone, Enviar siempre visible */
 #sp4input{font-size:16px}
 #sp4key{font-size:16px}
@@ -1748,6 +1784,32 @@ $("sp4close").addEventListener("click",function(){$("sp4chat").className="";});
 function sp5Chips(){try{var raw=localStorage.getItem("spiritia.v3.estado");if(!raw)return;var st=JSON.parse(raw);var ms=(st&&st.metrics)||[];var t="",f="",s="";ms.forEach(function(m){var u=((m.label||"")+" "+(m.value||"")).toLowerCase();if(u.indexOf("tablero")>=0)t=m.value;if(u.indexOf("fondo")>=0)f=m.value;if(u.indexOf("semana")>=0)s=m.value;});var c=$("sp5chips");if(c)c.innerHTML="<span>🌅 Tablero "+(t||"44%")+"</span><span>🎯 Fondo "+(f||"$0 / $20,000")+"</span><span>📅 Semana "+(s||"$0 / $400")+"</span>";}catch(e){}}
 sp5Chips();
 setTimeout(function(){$("sp4chat").className="open";render();},400);
+/* MUSA v16: panel de ajustes del chat (llave + modo) tras el engranaje */
+(function(){try{
+  var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
+  var panel=document.createElement("div");panel.id="sp16panel";
+  var kc=$("sp4keycard"),md=chat.querySelector(".sp4modes");
+  head.parentNode.insertBefore(panel,head.nextSibling);
+  if(md)panel.appendChild(md);
+  if(kc)panel.appendChild(kc);
+  var gear=document.createElement("button");gear.type="button";gear.className="sp16gear";gear.textContent="\u2699";gear.setAttribute("aria-label","Ajustes del chat");
+  gear.addEventListener("click",function(){panel.className=(panel.className==="open")?"":"open";});
+  head.appendChild(gear);
+  if(!getKey())panel.className="open";
+/* MUSA v16: trío selector en la cabecera (tocar un retrato = hablar con esa IA) */
+(function(){try{
+  var head=document.querySelector("#sp4chat .sp4head");if(!head)return;
+  var trio=document.createElement("div");trio.className="sp16trio";
+  function syncTrio(){Array.prototype.forEach.call(trio.children,function(b){b.className=(b.getAttribute("data-m")===mode)?"on":"";});}
+  function tbtn(img,name,md){var b=document.createElement("button");b.type="button";b.setAttribute("data-m",md);b.innerHTML='<img src="'+img+'" alt=""><span>'+name+'</span>';b.addEventListener("click",function(){mode=md;render();syncTrio();});return b;}
+  trio.appendChild(tbtn("avatar-claude.png","Muse","team"));
+  trio.appendChild(tbtn("avatar-chatgpt.png","ChatGPT","team"));
+  trio.appendChild(tbtn("avatar-gemini.png","Gemini","gemini"));
+  head.appendChild(trio);syncTrio();
+}catch(e){}})();
+
+}catch(e){}})();
+
 $("sp7menu").addEventListener("click",function(){var d=$("sp7drawer");d.className=(d.className==="open")?"":"open";});
 $("sp7share").addEventListener("click",function(){var u="https://crecerdigital.github.io/spirit-ia/";if(navigator.share){navigator.share({title:"MUSA",url:u}).catch(function(){});}else{copyText(u);alert("Enlace de MUSA copiado: "+u);}});
 Array.prototype.forEach.call(document.querySelectorAll("#sp7drawer button"),function(b){b.addEventListener("click",function(){var go=b.getAttribute("data-go");$("sp7drawer").className="";if(go==="chat")return;$("sp4chat").className="";setTimeout(function(){var s=document.getElementById(go);if(s)s.scrollIntoView({behavior:"smooth"});},60);});});
