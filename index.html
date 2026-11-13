@@ -1649,6 +1649,12 @@ html,body{overflow-x:hidden}
 .sp16trio img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid transparent;padding:1px}
 .sp16trio button.on img{border-color:#1f1f1f}
 .sp16trio span{display:block;font-size:10px;color:#555555;margin-top:2px}
+
+.sp16trio{display:flex;gap:16px;justify-content:center;align-items:flex-start;padding:8px 0 2px}
+.sp16trio button{background:none;border:none;text-align:center;cursor:pointer;padding:0}
+.sp16trio img{width:42px;height:42px;border-radius:50%;border:2px solid transparent;display:block}
+.sp16trio button.on img{border-color:#1f1f1f}
+.sp16trio span{display:block;font-size:10px;color:#555555;margin-top:2px}
 /* MUSA v14 · pantalla firme: sin zoom automático de iPhone, Enviar siempre visible */
 #sp4input{font-size:16px}
 #sp4key{font-size:16px}
@@ -1766,7 +1772,7 @@ async function askGemini(text){
       var j=await r.json();
       if(!r.ok){lastSt=r.status;continue;}
       var out=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts?j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""):"";
-      if(out){gHist.push({who:"Gemini",text:out});save(LS_G,gHist.slice(-40));bubble("ai","Gemini",out);return;}
+      if(out){gHist.push({who:"Gemini",text:out});save(LS_G,gHist.slice(-40));bubble("ai","Gemini",out);sp16Speak(out);return;}
       lastErr="Respuesta vacía del modelo.";
     }catch(e){lastErr="Sin conexión con Gemini ("+e.message+").";}
   }
@@ -1784,6 +1790,40 @@ $("sp4close").addEventListener("click",function(){$("sp4chat").className="";});
 function sp5Chips(){try{var raw=localStorage.getItem("spiritia.v3.estado");if(!raw)return;var st=JSON.parse(raw);var ms=(st&&st.metrics)||[];var t="",f="",s="";ms.forEach(function(m){var u=((m.label||"")+" "+(m.value||"")).toLowerCase();if(u.indexOf("tablero")>=0)t=m.value;if(u.indexOf("fondo")>=0)f=m.value;if(u.indexOf("semana")>=0)s=m.value;});var c=$("sp5chips");if(c)c.innerHTML="<span>🌅 Tablero "+(t||"44%")+"</span><span>🎯 Fondo "+(f||"$0 / $20,000")+"</span><span>📅 Semana "+(s||"$0 / $400")+"</span>";}catch(e){}}
 sp5Chips();
 setTimeout(function(){$("sp4chat").className="open";render();},400);
+
+
+/* MUSA v16: hablar igual — dictas, se envía solo, y la respuesta se escucha */
+var SP16VOICE=false;try{SP16VOICE=localStorage.getItem("musa_voz_auto")==="1";}catch(e){}
+function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.indexOf("es")===0;});if(vs.length)u.voice=vs[0];speechSynthesis.speak(u);}catch(e){}}
+(function(){try{
+  var head=$("sp4chat").querySelector(".sp4head");
+  var vb=document.createElement("button");vb.type="button";vb.className="sp16gear";
+  function paint(){vb.textContent=SP16VOICE?"\uD83D\uDD0A":"\uD83D\uDD07";vb.style.opacity=SP16VOICE?"1":"0.55";}
+  vb.setAttribute("aria-label","Voz automática");
+  vb.addEventListener("click",function(){SP16VOICE=!SP16VOICE;try{localStorage.setItem("musa_voz_auto",SP16VOICE?"1":"0");}catch(e){}paint();if(SP16VOICE)sp16Speak("Voz activada.");else try{speechSynthesis.cancel();}catch(e){}});
+  head.appendChild(vb);paint();
+}catch(e){}})();
+
+/* MUSA v16: hablar con quien tocas — los tres retratos eligen el modo */
+(function(){try{
+  var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
+  var b=head.querySelector("b"),sm=head.querySelector("small");
+  if(b)b.style.display="none"; if(sm)sm.style.display="none";
+  var trio=document.createElement("div");trio.className="sp16trio";
+  var defs=[["Muse","avatar-claude.png","team"],["ChatGPT","avatar-chatgpt.png","team"],["Gemini","avatar-gemini.png","gemini"]];
+  function sync(){Array.prototype.forEach.call(trio.children,function(btn,i){btn.className=(defs[i][2]===mode)?"on":"";});}
+  defs.forEach(function(d){
+    var btn=document.createElement("button");btn.type="button";
+    btn.innerHTML='<img src="'+d[1]+'" alt="'+d[0]+'"><span>'+d[0]+'</span>';
+    btn.addEventListener("click",function(){mode=d[2];render();sync();});
+    trio.appendChild(btn);
+  });
+  head.appendChild(trio);sync();
+  var mG=$("sp4mGem"),mT=$("sp4mTeam");
+  if(mG)mG.addEventListener("click",function(){setTimeout(sync,30);});
+  if(mT)mT.addEventListener("click",function(){setTimeout(sync,30);});
+}catch(e){}})();
+
 /* MUSA v16: panel de ajustes del chat (llave + modo) tras el engranaje */
 (function(){try{
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
@@ -1813,7 +1853,7 @@ setTimeout(function(){$("sp4chat").className="open";render();},400);
 $("sp7menu").addEventListener("click",function(){var d=$("sp7drawer");d.className=(d.className==="open")?"":"open";});
 $("sp7share").addEventListener("click",function(){var u="https://crecerdigital.github.io/spirit-ia/";if(navigator.share){navigator.share({title:"MUSA",url:u}).catch(function(){});}else{copyText(u);alert("Enlace de MUSA copiado: "+u);}});
 Array.prototype.forEach.call(document.querySelectorAll("#sp7drawer button"),function(b){b.addEventListener("click",function(){var go=b.getAttribute("data-go");$("sp7drawer").className="";if(go==="chat")return;$("sp4chat").className="";setTimeout(function(){var s=document.getElementById(go);if(s)s.scrollIntoView({behavior:"smooth"});},60);});});
-$("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("En esta vista, usa el micrófono de tu teclado: toca el campo de texto y luego el 🎤 del teclado.");return;}try{var r=new SR();r.lang="es-US";r.interimResults=false;r.onresult=function(ev){var t=ev.results[0][0].transcript;$("sp4input").value=($("sp4input").value+" "+t).trim();};r.start();}catch(e){alert("No pude abrir el micrófono aquí; usa el 🎤 del teclado.");}});
+$("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("En esta vista, usa el micrófono de tu teclado: toca el campo de texto y luego el 🎤 del teclado.");return;}try{var r=new SR();r.lang="es-US";r.interimResults=false;r.onresult=function(ev){var t=ev.results[0][0].transcript;$("sp4input").value=($("sp4input").value+" "+t).trim();$("sp4send").click();};r.start();}catch(e){alert("No pude abrir el micrófono aquí; usa el 🎤 del teclado.");}});
 })();
 </script>
 <!-- /MUSA v14 · Chat del equipo -->
