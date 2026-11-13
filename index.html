@@ -18,7 +18,7 @@
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
     <title>MUSA</title>
-    <!-- <title>MUSA v23</title> -->
+    <!-- <title>MUSA v24</title> -->
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -1821,24 +1821,27 @@ function sp12Human(st){
   if(st===-1||st===0)return "Sin conexión en este momento. Revisa tu señal e inténtalo de nuevo.";
   return "No pude responder en este momento. Inténtalo de nuevo en un minuto.";
 }
+function sp24Fetch(url,opts,ms){return new Promise(function(res,rej){var c=new AbortController();var t=setTimeout(function(){c.abort();},ms);var o={};for(var k in opts)o[k]=opts[k];o.signal=c.signal;fetch(url,o).then(function(r){clearTimeout(t);res(r);}).catch(function(e){clearTimeout(t);rej(e);});});}
 async function askGemini(text){
   var key=getKey();
   if(!key){bubble("ai","Gemini","Todavía no tengo llave en este iPhone. Créal gratis en aistudio.google.com/apikey y pégala arriba: tardo 1 minuto en encenderme.");return;}
   var contents=gHist.filter(function(m){return m.who==="me"||m.who==="Gemini";}).slice(-14).map(function(m){return{role:m.who==="me"?"user":"model",parts:[{text:m.text}]};});
   contents.push({role:"user",parts:[{text:text}]});
   var lastErr="",lastSt=0;
-  await sp12RefreshModels(key);
-  for(var i=0;i<models.length;i++){
+  var wd=document.createElement("div");wd.id="sp24wait";wd.className="sp4m ai";wd.textContent="Gemini está escribiendo…";$("sp4msgs").appendChild(wd);$("sp4msgs").scrollTop=1e7;
+  function sp24Done(){var e=document.getElementById("sp24wait");if(e)e.remove();}
+  try{await Promise.race([sp12RefreshModels(key),new Promise(function(_,rej){setTimeout(function(){rej(new Error("t"));},8000);})]);}catch(e){}
+  for(var i=0;i<models.length&&i<2;i++){
     try{
-      var r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+models[i]+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:"Eres Gemini, asistente del equipo de Crecer Digital. Tu jefa es Muse. Respondes en español, directo, útil y breve salvo que pidan detalle."}]},contents:contents})});
+      var r=await sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models/"+models[i]+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:"Eres Gemini, asistente del equipo de Crecer Digital. Tu jefa es Muse. Respondes en español, directo, útil y breve salvo que pidan detalle."}]},contents:contents})},20000);
       var j=await r.json();
       if(!r.ok){lastSt=r.status;continue;}
       var out=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts?j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""):"";
-      if(out){gHist.push({who:"Gemini",text:out});save(LS_G,gHist);bubble("ai","Gemini",out);sp16Speak(out);return;}
+      if(out){sp24Done();gHist.push({who:"Gemini",text:out});save(LS_G,gHist);bubble("ai","Gemini",out);sp16Speak(out);return;}
       lastErr="Respuesta vacía del modelo.";
-    }catch(e){lastErr="Sin conexión con Gemini ("+e.message+").";}
+    }catch(e){if(e&&e.name==="AbortError"){lastSt=503;lastErr="Tiempo agotado.";}else{lastErr="Sin conexión con Gemini ("+e.message+").";}}
   }
-  bubble("ai","Gemini",sp12Human(lastSt));
+  sp24Done();bubble("ai","Gemini",sp12Human(lastSt));
 }
 $("sp4send").addEventListener("click",function(){
   var t=$("sp4input").value.trim();if(!t)return;$("sp4input").value="";
@@ -2015,7 +2018,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
 <script>
 /* MUSA · vigilante de versión: ninguna copia instalada se queda pegada en una versión vieja. */
 (function(){try{
-  var mine="v23";
+  var mine="v24";
   if(sessionStorage.getItem("spirit_watchdog_"+mine))return;
   fetch("index.html?rev="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
     var m=t.match(/<title>MUSA (v[0-9]+)<\/title>/);
