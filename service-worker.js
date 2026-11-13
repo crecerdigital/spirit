@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "musa-v18-cache-v1";
+const CACHE_NAME = "musa-v19-cache-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
