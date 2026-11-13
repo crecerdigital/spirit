@@ -10,10 +10,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MUSA" />
+    <meta property="og:title" content="MUSA" />
+    <meta property="og:image" content="https://crecerdigital.github.io/spirit/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://crecerdigital.github.io/spirit/icon-512.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <title>MUSA v22</title>
+    <title>MUSA</title>
+    <!-- <title>MUSA v23</title> -->
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
 
@@ -407,7 +412,7 @@
         <h1>La consola diaria de <span class="accent">Crecer Digital</span>.</h1>
         <p class="lede">App principal de trabajo de la casa. Aquí vive el día: el panel con las cifras reales, el paquete del dueño, los encargos del equipo — Muse opera y verifica, ChatGPT analiza, Gemini investiga y crea — y las puertas de calidad antes de publicar. Todo se guarda en este dispositivo.</p>
         <div class="pulse" role="group" aria-label="Estado del centro de mando">
-          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>App v22 · Operativa</div></div>
+          <div class="cell"><div class="k">Estado</div><div class="v"><span class="dot" aria-hidden="true"></span>Operativa</div></div>
           <div class="cell"><div class="k">Fecha</div><div class="v" id="today">—</div></div>
           <div class="cell"><div class="k">Equipo</div><div class="v">Muse · ChatGPT · Gemini</div></div>
           <div class="cell"><div class="k">Encargos en cola</div><div class="v" id="pulseQueue">0</div></div>
@@ -787,7 +792,7 @@
       </section>
 
       <footer>
-        <span>MUSA v22 · Consola diaria privada de Crecer Digital</span>
+        <span>MUSA</span>
         <span class="mono" id="footDate"></span>
       </footer>
     </main>
@@ -2010,7 +2015,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
 <script>
 /* MUSA · vigilante de versión: ninguna copia instalada se queda pegada en una versión vieja. */
 (function(){try{
-  var mine=(document.title.match(/v[0-9]+/)||[""])[0];if(!mine)return;
+  var mine="v23";
   if(sessionStorage.getItem("spirit_watchdog_"+mine))return;
   fetch("index.html?rev="+Date.now(),{cache:"no-store"}).then(function(r){return r.text();}).then(function(t){
     var m=t.match(/<title>MUSA (v[0-9]+)<\/title>/);
