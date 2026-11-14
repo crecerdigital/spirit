@@ -1,0 +1,39 @@
+
+/* MUSA v72 (sp25): streaming, markdown seguro, scroll inteligente, estados por etapas — blanco y gris, cero dorado */
+.sp25body{display:block;white-space:normal}
+.sp25body>div{margin:0 0 6px}
+.sp25body>div:last-child{margin-bottom:0}
+.sp25body ul,.sp25body ol{margin:2px 0 8px;padding-left:20px}
+.sp25body li{margin:2px 0}
+.sp25body .sp25h{font-weight:700;margin:8px 0 4px}
+.sp25code{background:#f0f0f0;border:1px solid #e4e4e4;border-radius:5px;padding:0 4px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.sp25pre{background:#f5f5f5;border:1px solid #e4e4e4;border-radius:8px;padding:8px 10px;overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;white-space:pre;margin:4px 0 8px}
+.sp25body a{color:#1f1f1f;text-decoration:underline}
+.sp4m{content-visibility:auto;contain-intrinsic-size:auto 64px}
+/* v100: red + tareas en segundo plano — blanco y gris, tokens existentes */
+#sp100bar{display:flex;align-items:center;gap:8px;padding:4px 14px;background:#ffffff;border-top:1px solid #ececec;font-size:12px;color:#6f6f6f}
+#sp100net{display:inline-flex;align-items:center;gap:5px}
+#sp100net i{width:8px;height:8px;border-radius:50%;background:#3ddc84;display:block}
+#sp100net.off{color:#c62828}
+#sp100net.off i{background:#c62828}
+#sp100tasksBtn{margin-left:auto;background:#f2f2f2;color:#1f1f1f;border:1px solid #e6e6e6;border-radius:999px;padding:4px 11px;font-size:12px;cursor:pointer;min-height:0}
+#sp100tasks{display:none;background:#ffffff;border-top:1px solid #ececec;padding:10px 14px;max-height:46vh;overflow-y:auto}
+#sp100tasks.open{display:block}
+#sp100tasks h3{font-size:14px;margin:2px 0 4px;color:#1f1f1f}
+.sp100note{font-size:12px;color:#6f6f6f;margin:3px 0}
+#sp100taskRow{display:flex;gap:8px;margin:8px 0}
+#sp100taskIn{flex:1;background:#ffffff;border:1px solid #e0e0e0;border-radius:10px;color:#1f1f1f;padding:9px;font-size:14px;min-width:0}
+#sp100taskAdd{background:#1f1f1f;color:#ffffff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer}
+.sp100t{border:1px solid #ececec;border-radius:10px;padding:8px 10px;margin:5px 0;font-size:13px;color:#1f1f1f}
+.sp100acts{display:flex;gap:6px;margin-top:6px}
+.sp100acts button{background:#f2f2f2;color:#1f1f1f;border:1px solid #e6e6e6;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;min-height:0}
+.sp25acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sp25acts .sp4copy{margin-top:0}
+.sp25dots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.sp25dots i{width:6px;height:6px;border-radius:50%;background:#9a9a9a;display:block;animation:sp25blink 1.2s infinite}
+.sp25dots i:nth-child(2){animation-delay:.18s}
+.sp25dots i:nth-child(3){animation-delay:.36s}
+@keyframes sp25blink{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+#sp25jump{position:absolute;right:14px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:40;background:#1f1f1f;color:#ffffff;border:none;border-radius:999px;padding:9px 14px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;display:none}
+#sp25jump.show{display:block}
+#sp24wait{color:#6f6f6f}
