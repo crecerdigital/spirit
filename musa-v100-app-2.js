@@ -1,17 +1,17 @@
 
 (function(){
 "use strict";
-var LS_KEY="spirit_gemini_key", LS_G="spirit_chat_gemini_v4", LS_T="spirit_chat_team_v4";
+var LS_KEY="spirit_gemini_key", LS_G="spirit_chat_gemini_v4", LS_T="spirit_chat_team_v4", LS_P="spirit_chat_pollinations_v1";
 var mode="gemini";
 var models=["gemini-flash-latest","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash-001","gemini-2.0-flash"];
 function $(id){return document.getElementById(id);}
 function load(k,d){try{var v=window.localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function save(k,v){try{window.localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function getKey(){try{return window.localStorage.getItem(LS_KEY)||"";}catch(e){return "";}}
-var gHist=load(LS_G,[]), tHist=load(LS_T,[]);
-(function(){var bad=["is not found for API version","Call ModelService","No pude responder ahora:","supported for generateContent","not supported for generateContent"];function clean(a){return a.filter(function(m){var t=(m&&m.text)||"";for(var i=0;i<bad.length;i++){if(t.indexOf(bad[i])>=0)return false;}return true;});}var g2=clean(gHist),t2=clean(tHist);if(g2.length!==gHist.length){gHist=g2;save(LS_G,gHist);}if(t2.length!==tHist.length){tHist=t2;save(LS_T,tHist);}})();
-var SP6AV={"Muse":"","ChatGPT":"","Gemini":"","Equipo":""};
-var SP8IMG={"Muse":"avatar-claude.png","ChatGPT":"avatar-chatgpt.png","Gemini":"avatar-gemini.png","Equipo":"avatar-claude.png"};
+var gHist=load(LS_G,[]), tHist=load(LS_T,[]), pHist=load(LS_P,[]);
+(function(){var bad=["is not found for API version","Call ModelService","No pude responder ahora:","supported for generateContent","not supported for generateContent"];function clean(a){return a.filter(function(m){var t=(m&&m.text)||"";for(var i=0;i<bad.length;i++){if(t.indexOf(bad[i])>=0)return false;}return true;});}var g2=clean(gHist),t2=clean(tHist),p2=clean(pHist);if(g2.length!==gHist.length){gHist=g2;save(LS_G,gHist);}if(t2.length!==tHist.length){tHist=t2;save(LS_T,tHist);}if(p2.length!==pHist.length){pHist=p2;save(LS_P,pHist);}})();
+var SP6AV={"Muse":"","ChatGPT":"","Gemini":"","Equipo":"","Pollinations":""};
+var SP8IMG={"Muse":"avatar-claude.png","ChatGPT":"avatar-chatgpt.png","Gemini":"avatar-gemini.png","Equipo":"avatar-claude.png","Pollinations":"avatar-pollinations.png"};
 function sp6speak(t){try{var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices();for(var i=0;i<vs.length;i++){if(vs[i].lang&&vs[i].lang.indexOf("es")===0){u.voice=vs[i];break;}}speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 /* MUSA v72 (sp25): markdown sanitizado, scroll inteligente, estados por etapas, reintentos */
 var sp25Busy=false;
@@ -84,14 +84,15 @@ function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navi
 function render(){
   window.__musaBulk=true;
   $("sp4msgs").innerHTML="";
-  var list=mode==="gemini"?gHist:tHist;
+  var list=mode==="gemini"?gHist:(mode==="pollinations"?pHist:tHist);
   if(!list.length){
-    bubble("ai",mode==="gemini"?"Gemini":"Equipo",mode==="gemini"?"Hola, soy Gemini. Estoy EN VIVO dentro de MUSA: escríbeme y te respondo al instante. Mi fuerte: investigación y creación.":"Aquí escribes a Muse y ChatGPT. Muse recoge tu mensaje, lo trabaja con ChatGPT y las respuestas verificadas quedan en MUSA, en la sección Respuestas del equipo.");
+    bubble("ai",mode==="gemini"?"Gemini":(mode==="pollinations"?"Pollinations":"Equipo"),mode==="gemini"?"Hola, soy Gemini. Estoy EN VIVO dentro de MUSA: escríbeme y te respondo al instante. Mi fuerte: investigación y creación.":(mode==="pollinations"?"Hola, soy Pollinations. Estoy EN VIVO dentro de MUSA y no necesito llave: escríbeme y te respondo. Mi fuerte: respuestas rápidas y creación.":"Aquí escribes a Muse y ChatGPT. Muse recoge tu mensaje, lo trabaja con ChatGPT y las respuestas verificadas quedan en MUSA, en la sección Respuestas del equipo."));
   }
   list.forEach(function(m){bubble("ai",m.who,m.text,m.who==="me"&&mode==="team");});
   $("sp4mGem").className="sp4mode"+(mode==="gemini"?" on":"");
   $("sp4mTeam").className="sp4mode"+(mode==="team"?" on":"");
-  $("sp4modeNote").textContent=mode==="gemini"?"Gemini responde al instante, directo desde la app.":"Muse y ChatGPT no tienen canal en vivo gratuito: Muse trae sus respuestas verificadas a MUSA. Copia tu mensaje y pégalo en el chat de Muse para activar al equipo al momento.";
+  $("sp4mPol").className="sp4mode"+(mode==="pollinations"?" on":"");
+  $("sp4modeNote").textContent=mode==="gemini"?"Gemini responde al instante, directo desde la app.":(mode==="pollinations"?"Pollinations responde en vivo dentro de MUSA, gratis y sin llave. Su servicio a veces se satura: si tarda, dale unos segundos.":"Muse y ChatGPT no tienen canal en vivo gratuito: Muse trae sus respuestas verificadas a MUSA. Copia tu mensaje y pégalo en el chat de Muse para activar al equipo al momento.");
   keyState();window.__musaBulk=false;
 }
 function keyState(){
@@ -319,13 +320,56 @@ async function askGemini(text){
   bubble("ai","Gemini",sp12Human(lastSt)+(lastErr?"\n\nDetalle de Google: "+lastErr:""));
   sp25AttachRetry(text);
 }
+
+/* Ola 100 · F6: Pollinations EN VIVO dentro de MUSA — API de texto gratuita y
+   anonima (sin llave, CORS abierto), una pieza por llamada GET, modelo
+   openai-fast. Reutiliza bubble(), sp25SetStatus, sp25Cancel y save(). */
+function spPAttachRetry(userText){try{var box=$("sp4msgs");var d=box.lastElementChild;if(!d)return;var b=document.createElement("button");b.className="sp4copy";b.type="button";b.textContent="Reintentar";b.addEventListener("click",function(){if(!sp25Busy)askPollinations(userText);});var acts=d.querySelector(".sp25acts");if(acts)acts.appendChild(b);else d.appendChild(b);}catch(e){}}
+async function askPollinations(text){
+  if(sp25Busy){var spPq=setInterval(function(){if(!sp25Busy){clearInterval(spPq);askPollinations(text);}},700);return;}
+  sp25Busy=true;sp25UserCancel=false;
+  var box=$("sp4msgs");
+  var wd=document.createElement("div");wd.id="sp24wait";wd.className="sp4m ai";
+  var wst=document.createElement("span");wst.id="sp25status";wst.textContent="Conectando\u2026";
+  var dots=document.createElement("span");dots.className="sp25dots";dots.setAttribute("aria-hidden","true");dots.innerHTML="<i></i><i></i><i></i>";
+  wd.appendChild(wst);wd.appendChild(dots);
+  var near0=sp25Near(box);box.appendChild(wd);if(near0)box.scrollTop=1e7;else sp25ShowJump(true);
+  var ctrl=new AbortController();sp25ActiveCtrl=ctrl;
+  var stopB=document.createElement("button");stopB.id="sp25stop";stopB.type="button";stopB.textContent="Detener";
+  stopB.style.cssText="display:block;margin:4px 0 8px auto;padding:5px 12px;border:1px solid #d9d9d9;border-radius:999px;background:#fff;color:#333;font-size:12px;cursor:pointer";
+  stopB.addEventListener("click",function(){sp25Cancel();});
+  box.appendChild(stopB);
+  function spPDone(){var e=document.getElementById("sp24wait");if(e)e.remove();var b=document.getElementById("sp25stop");if(b)b.remove();}
+  var to=setTimeout(function(){try{ctrl.abort();}catch(e){}},45000);
+  try{
+    sp25SetStatus("Pollinations est\u00e1 escribiendo\u2026");
+    var SYS="Eres Pollinations, asistente del equipo de Crecer Digital. Tu jefa es Muse. Respondes en espa\u00f1ol, directo, \u00fatil y breve salvo que pidan detalle.";
+    var ctx=pHist.filter(function(m){return m.who==="me"||m.who==="Pollinations";}).slice(-6).map(function(m){return (m.who==="me"?"Usuario: ":"Pollinations: ")+m.text;}).join("\n");
+    var prompt=SYS+"\n\n"+(ctx?ctx+"\n":"")+"Usuario: "+text+"\nPollinations:";
+    if(prompt.length>3500)prompt=SYS+"\n\nUsuario: "+text+"\nPollinations:";
+    var r=await fetch("https://text.pollinations.ai/"+encodeURIComponent(prompt)+"?model=openai-fast",{signal:ctrl.signal});
+    clearTimeout(to);
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    var acc=(await r.text()||"").replace(/^\s+|\s+$/g,"");
+    spPDone();sp25ActiveCtrl=null;sp25Busy=false;
+    if(!acc){bubble("ai","Pollinations","Llegu\u00e9 vac\u00edo esta vez. Preg\u00fantame de nuevo.");return;}
+    pHist.push({who:"Pollinations",text:acc});save(LS_P,pHist);bubble("ai","Pollinations",acc);sp16Speak(acc);
+  }catch(e){
+    clearTimeout(to);spPDone();sp25ActiveCtrl=null;sp25Busy=false;
+    if(sp25UserCancel){sp25UserCancel=false;bubble("ai","Pollinations","Detenido. Preg\u00fantame otra cosa cuando quieras.");return;}
+    bubble("ai","Pollinations","No pude responder ahora: mi servicio gratuito a veces se satura o tarda demasiado. Int\u00e9ntalo de nuevo en un momento.");
+    spPAttachRetry(text);
+  }
+}
 $("sp4send").addEventListener("click",function(){
   var t=$("sp4input").value.trim();if(!t)return;$("sp4input").value="";
   if(mode==="gemini"){gHist.push({who:"me",text:t});save(LS_G,gHist);bubble("ai","me",t);askGemini(t);}
+  else if(mode==="pollinations"){pHist.push({who:"me",text:t});save(LS_P,pHist);bubble("ai","me",t);askPollinations(t);}
   else{tHist.push({who:"me",text:t});save(LS_T,tHist);bubble("ai","me",t,true);var r="Guardado en tu bandeja del equipo. Muse lo recoge en su ronda y responde en MUSA junto con ChatGPT. Para activarlo al momento, copia el mensaje y pégalo en el chat de Muse.";tHist.push({who:"Equipo",text:r});save(LS_T,tHist);bubble("ai","Equipo",r);}
 });
 $("sp4mGem").addEventListener("click",function(){mode="gemini";render();});
 $("sp4mTeam").addEventListener("click",function(){mode="team";render();});
+$("sp4mPol").addEventListener("click",function(){mode="pollinations";render();});
 $("sp4btn").addEventListener("click",function(){$("sp4chat").className="open";render();});
 $("sp4close").addEventListener("click",function(){$("sp4chat").className="";});
 function sp5Chips(){try{var raw=localStorage.getItem("spiritia.v3.estado");if(!raw)return;var st=JSON.parse(raw);var ms=(st&&st.metrics)||[];var t="",f="",s="";ms.forEach(function(m){var u=((m.label||"")+" "+(m.value||"")).toLowerCase();if(u.indexOf("tablero")>=0)t=m.value;if(u.indexOf("fondo")>=0)f=m.value;if(u.indexOf("semana")>=0)s=m.value;});var c=$("sp5chips");if(c)c.innerHTML="<span>Tablero "+(t||"44%")+"</span><span>Fondo "+(f||"$0 / $20,000")+"</span><span>Semana "+(s||"$0 / $400")+"</span>";}catch(e){}}
@@ -369,12 +413,13 @@ function idbOpen(cb){try{var r=indexedDB.open("musa-memoria",1);r.onupgradeneede
 function idbSet(k,v){idbOpen(function(db){if(!db)return;try{db.transaction("kv","readwrite").objectStore("kv").put(v,k);}catch(e){}});}
 function idbGet(k,cb){idbOpen(function(db){if(!db){cb(null);return;}try{var rq=db.transaction("kv").objectStore("kv").get(k);rq.onsuccess=function(){cb(rq.result||null);};rq.onerror=function(){cb(null);};}catch(e){cb(null);}});}
 var __saveOrig=save;
-save=function(k,v){try{if(k===LS_G||k===LS_T){idbSet(k,v);try{localStorage.removeItem(k);}catch(e){}return;}}catch(e){}__saveOrig(k,v);};
+save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localStorage.removeItem(k);}catch(e){}return;}}catch(e){}__saveOrig(k,v);};
 (function(){try{
   var marks=["is not found for API version","Call ModelService","No pude responder ahora:","supported for generateContent","not supported for generateContent"];
   function clean(a){return (a||[]).filter(function(m){var t=(m&&m.text)||"";return !marks.some(function(x){return t.indexOf(x)>=0;});});}
   idbGet(LS_G,function(v){var old=clean(load(LS_G,[]));if(v&&v.length>=old.length){gHist=clean(v);}else{gHist=old;if(old.length)idbSet(LS_G,old);}render();});
   idbGet(LS_T,function(v){var old=clean(load(LS_T,[]));if(v&&v.length>=old.length){tHist=clean(v);}else{tHist=old;if(old.length)idbSet(LS_T,old);}render();});
+  idbGet(LS_P,function(v){var old=clean(load(LS_P,[]));if(v&&v.length>=old.length){pHist=clean(v);}else{pHist=old;if(old.length)idbSet(LS_P,old);}render();});
   idbGet("spirit_chat_draft_v1",function(d){try{if(d&&d.text&&d.text.length>20){gHist.push({who:"Gemini",text:d.text+"\n\n⚠️ Respuesta recuperada: la app se cerró mientras escribía. Esto es lo que alcanzó a llegar."});idbSet(LS_G,gHist);idbSet("spirit_chat_draft_v1",null);render();}}catch(e){}});
   var p=$("sp16panel");if(p){var d=document.createElement("div");d.style.cssText="padding:8px 14px;font-size:12px;color:#6f6f6f";d.textContent="\uD83E\uDDE0 Memoria completa: todo se guarda, sin cortes.";p.appendChild(d);}
 }catch(e){}})();
@@ -431,7 +476,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
   var b=head.querySelector("b"),sm=head.querySelector("small");
   if(b)b.style.display="none"; if(sm)sm.style.display="none";
   var trio=document.createElement("div");trio.className="sp16trio";
-  var defs=[["Muse","avatar-claude.png","team"],["ChatGPT","avatar-chatgpt.png","team"],["Gemini","avatar-gemini.png","gemini"]];
+  var defs=[["Muse","avatar-claude.png","team"],["ChatGPT","avatar-chatgpt.png","team"],["Gemini","avatar-gemini.png","gemini"],["Pollinations","avatar-pollinations.png","pollinations"]];
   function sync(){Array.prototype.forEach.call(trio.children,function(btn,i){btn.className=(defs[i][2]===mode)?"on":"";});}
   defs.forEach(function(d){
     var btn=document.createElement("button");btn.type="button";
@@ -443,6 +488,8 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
   var mG=$("sp4mGem"),mT=$("sp4mTeam");
   if(mG)mG.addEventListener("click",function(){setTimeout(sync,30);});
   if(mT)mT.addEventListener("click",function(){setTimeout(sync,30);});
+  var mP=$("sp4mPol");
+  if(mP)mP.addEventListener("click",function(){setTimeout(sync,30);});
 }catch(e){}})();
 
 /* MUSA v16: panel de ajustes del chat (llave + modo) tras el engranaje */
@@ -467,6 +514,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
   trio.appendChild(tbtn("avatar-claude.png","Muse","team"));
   trio.appendChild(tbtn("avatar-chatgpt.png","ChatGPT","team"));
   trio.appendChild(tbtn("avatar-gemini.png","Gemini","gemini"));
+  trio.appendChild(tbtn("avatar-pollinations.png","Pollinations","pollinations"));
   head.appendChild(trio);syncTrio();
 }catch(e){}})();
 
