@@ -278,7 +278,7 @@
     startBtn.disabled = true;
     endBtn.disabled = false;
     statusEl.textContent = "Sesión en curso · Día " + day.dia + " — " + day.titulo +
-      ". El chat de Gemini está abierto y dirigiendo la práctica: responde en voz alta, bloque a bloque. Si Gemini pide la llave, está en la tarjeta del chat (⚙) — este módulo nunca la pide.";
+      ". El chat de Gemini está abierto y dirigiendo la práctica: responde en voz alta, bloque a bloque. Si Gemini pide la llave, está en la tarjeta del chat (en Ajustes) — este módulo nunca la pide.";
     miPaintTimer();
     var sec = $("ingles");
     if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -302,7 +302,7 @@
     summaryEl.className = "mi-summary show";
     summaryEl.innerHTML = "";
     var big = document.createElement("span"); big.className = "mi-sbig";
-    big.textContent = byTimer ? "⏰ Sesión de 30 minutos terminada" : "Sesión terminada";
+    big.textContent = byTimer ? "Sesión de 30 minutos terminada" : "Sesión terminada";
     var body = document.createElement("span");
     body.textContent = "Día " + dia + " — " + day.titulo + ": " + firmes.length +
       " bloques firmes hoy · " + repetir.length + " a repetir mañana" +
@@ -316,7 +316,7 @@
       "; a repetir mañana = " + (repetir.length ? repetir.map(function (i) { return "\"" + day.bloques[i] + "\""; }).join(" · ") : "ninguno marcado") +
       ". Confírmame en español, en pocas líneas, qué bloques quedaron firmes y cuáles repito mañana, y despídete hasta la próxima sesión.");
     if (byTimer) {
-      try { alert("⏰ Práctica de inglés: sesión de 30 minutos terminada. Revisa tu resumen de bloques firmes y a repetir."); } catch (e) {}
+      try { alert("Práctica de inglés: sesión de 30 minutos terminada. Revisa tu resumen de bloques firmes y a repetir."); } catch (e) {}
     }
   }
 
