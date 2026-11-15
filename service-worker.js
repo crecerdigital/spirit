@@ -1,9 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "musa-v24-cache-v1";
+const CACHE_NAME = "musa-v102-cache-v2";
 const APP_SHELL = [
-  "./",
-  "./index.html",
   "./manifest.webmanifest",
   "./apple-touch-icon.png",
   "./icon-192.png",
