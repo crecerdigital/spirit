@@ -391,18 +391,21 @@ save=function(k,v){try{if(k===LS_G||k===LS_T){idbSet(k,v);try{localStorage.remov
   function st(t){$("sp17status").textContent=t;}
   function face(){var g=(mode==="gemini");$("sp17img").src=g?"avatar-gemini.png":"avatar-claude.png";$("sp17name").textContent=g?"Gemini":"Muse";}
   function noLive(){st("Este navegador no permite escuchar en vivo; abre MUSA en Safari o desde tu pantalla de inicio para conversar por llamada. Mientras tanto, puedes dictar con el \uD83C\uDFA4 del chat.");$("sp17mic").className="";}
+    var lwatch=null,lfast=0,lstop=false;
+  function lclear(){if(lwatch){clearTimeout(lwatch);lwatch=null;}}
   function listen(){if(!active||waiting||muted)return;if(!SR){noLive();return;}
-    try{rec=new SR();rec.lang="es-ES";rec.interimResults=false;
-      rec.onresult=function(ev){var t=ev.results[0][0].transcript;errs=0;waiting=true;$("sp17mic").className="";st("Pensando\u2026");$("sp4input").value=t;$("sp4send").click();};
-      rec.onend=function(){if(active&&!waiting&&!muted)setTimeout(listen,350);};
-      rec.onerror=function(ev){var er=ev&&ev.error;if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){noLive();return;}errs++;if(active&&!waiting&&!muted){if(errs>=3){st("Toca el micr\u00f3fono para hablar");$("sp17mic").className="";}else setTimeout(listen,600);}};
+    try{rec=new SR();rec.lang="es-ES";rec.interimResults=false;var t0=Date.now(),got=false;
+      rec.onresult=function(ev){got=true;lclear();var t=ev.results[0][0].transcript;errs=0;lfast=0;waiting=true;$("sp17mic").className="";st("Pensando\u2026");$("sp4input").value=t;$("sp4send").click();};
+      rec.onend=function(){lclear();if(lstop){lstop=false;return;}if(active&&!waiting&&!muted){if(!got&&(Date.now()-t0)<700){lfast++;if(lfast>=3){noLive();return;}}else lfast=0;setTimeout(listen,350);}};
+      rec.onerror=function(ev){lclear();var er=ev&&ev.error;if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){noLive();return;}if(er==="no-speech"){if(active&&!waiting&&!muted)setTimeout(listen,400);return;}errs++;if(active&&!waiting&&!muted){if(errs>=3){st("Toca el micr\u00f3fono para hablar");$("sp17mic").className="";}else setTimeout(listen,600);}};
       $("sp17mic").className="live";st("Escuchando\u2026");rec.start();
+      lclear();lwatch=setTimeout(function(){if(active&&!waiting&&!muted&&!got){lstop=true;try{if(rec)rec.abort();}catch(e){}$("sp17mic").className="";st("No logr\u00e9 escucharte. Toca el micr\u00f3fono para intentarlo de nuevo; si sigue igual, abre MUSA en Safari.");}},10000);
     }catch(e){st("Toca el micr\u00f3fono para hablar");}}
   window.__sp17after=function(){if(!active)return;waiting=false;setTimeout(listen,300);};
   window.__sp17speak=function(on){speaking=on;try{if(active){scr.className="open"+(on?" speaking":"");if(on)st("Hablando\u2026");}}catch(e){}};
   setInterval(function(){if(active&&waiting&&!muted&&!speaking&&!sp25Busy){waiting=false;setTimeout(listen,400);}},2500);
   function start(){active=true;muted=false;speaking=false;errs=0;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversaci\u00f3n en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");listen();}
-  function end(){active=false;waiting=false;muted=false;speaking=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
+  function end(){lclear();active=false;waiting=false;muted=false;speaking=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
   var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.textContent="\uD83D\uDCDE";pb.setAttribute("aria-label","Llamada en vivo");
   pb.addEventListener("click",start);head.appendChild(pb);
   $("sp17mic").addEventListener("click",function(){if(!active)return;if(muted){muted=false;$("sp17mute").textContent="Silenciar";}if(!waiting)listen();});
