@@ -52,14 +52,19 @@ function sp25md(src){
 function sp25Near(box){box=box||$("sp4msgs");if(!box)return true;return (box.scrollHeight-box.scrollTop-box.clientHeight)<140;}
 function sp25ShowJump(sh){var b=document.getElementById("sp25jump");if(b)b.className=sh?"show":"";}
 function sp25JumpInit(){try{var chat=$("sp4chat");if(!chat||document.getElementById("sp25jump"))return;var b=document.createElement("button");b.id="sp25jump";b.type="button";b.textContent="↓ Ir al último mensaje";b.addEventListener("click",function(){var m=$("sp4msgs");if(m)m.scrollTop=1e7;sp25ShowJump(false);});chat.appendChild(b);var m=$("sp4msgs");if(m)m.addEventListener("scroll",function(){if(sp25Near(m))sp25ShowJump(false);});}catch(e){}}
-function sp25SetStatus(t){var e=document.getElementById("sp25status");if(e)e.textContent=t;}
+function sp25SetStatus(t){var e=document.getElementById("sp25status");if(e)e.textContent=t;try{musaPillStatus(t);}catch(x){}}
+function musaPillEl(){return document.getElementById("sp100pill");}
+function musaPillShow(){var p=musaPillEl();if(!p)return;var s=p.querySelector(".st2");if(s)s.textContent="está trabajando";p.className="show";}
+function musaPillStatus(t){var p=musaPillEl();if(!p||p.className!=="show")return;var s="está trabajando";if(t&&t.indexOf("escribiendo")>=0)s="está escribiendo…";var e=p.querySelector(".st2");if(e)e.textContent=s;}
+function musaPillHide(){var p=musaPillEl();if(p)p.className="";}
+(function(){try{var chat=$("sp4chat");if(!chat||document.getElementById("sp100pill"))return;var p=document.createElement("div");p.id="sp100pill";p.innerHTML="<img src=\"avatar-gemini.png\" alt=\"\"><span class=\"who2\">Gemini</span><span class=\"st2\">está trabajando</span><span class=\"sp25dots\" aria-hidden=\"true\"><i></i><i></i><i></i></span>";chat.appendChild(p);}catch(e){}})();
 function sp25Sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function sp25Regen(){if(sp25Busy||mode!=="gemini")return;for(var i=gHist.length-1;i>=0;i--){if(gHist[i].who==="me"){askGemini(gHist[i].text);return;}}}
 function sp25AttachRetry(userText){try{var box=$("sp4msgs");var d=box.lastElementChild;if(!d)return;var b=document.createElement("button");b.className="sp4copy";b.type="button";b.textContent="Reintentar";b.addEventListener("click",function(){if(!sp25Busy)askGemini(userText);});var acts=d.querySelector(".sp25acts");if(acts)acts.appendChild(b);else d.appendChild(b);}catch(e){}}
 function bubble(list,who,text,extra){
   var box=$("sp4msgs");
   var near=sp25Near(box);
-  var d=document.createElement("div");d.className="sp4m "+(who==="me"?"me":"ai");
+  var d=document.createElement("div");  d.className="sp4m "+(who==="me"?"me":"ai")+(window.__musaBulk?"":" musa-in");
   var w=document.createElement("span");w.className="who";w.textContent=who==="me"?"Tú":(SP6AV[who]||"")+who;if(SP8IMG[who]){var av=document.createElement("img");av.src=SP8IMG[who];av.alt="";av.className="sp8ava";av.onerror=function(){av.remove();};w.insertBefore(av,w.firstChild);}d.appendChild(w);
   var bd=document.createElement("div");bd.className="sp25body";
   if(who==="me"){bd.textContent=text;}else{bd.innerHTML=sp25md(text);}
@@ -77,6 +82,7 @@ function bubble(list,who,text,extra){
 }
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(function(){});}else{var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}}
 function render(){
+  window.__musaBulk=true;
   $("sp4msgs").innerHTML="";
   var list=mode==="gemini"?gHist:tHist;
   if(!list.length){
@@ -86,7 +92,7 @@ function render(){
   $("sp4mGem").className="sp4mode"+(mode==="gemini"?" on":"");
   $("sp4mTeam").className="sp4mode"+(mode==="team"?" on":"");
   $("sp4modeNote").textContent=mode==="gemini"?"Gemini responde al instante, directo desde la app.":"Muse y ChatGPT no tienen canal en vivo gratuito: Muse trae sus respuestas verificadas a MUSA. Copia tu mensaje y pégalo en el chat de Muse para activar al equipo al momento.";
-  keyState();
+  keyState();window.__musaBulk=false;
 }
 function keyState(){
   var k=getKey();
@@ -108,7 +114,7 @@ async function sp12RefreshModels(key){
     var r=await sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models",{headers:{"x-goog-api-key":key}},8000);
     var d=await r.json();
     if(r.ok&&d.models){
-      var ok=d.models.filter(function(m){return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0;}).map(function(m){return m.name.replace("models/","");});
+      var ok=d.models.filter(function(m){return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0;}).map(function(m){return m.name.replace("models/","");}).filter(function(n){return n.indexOf("tts")<0&&n.indexOf("embedding")<0&&n.indexOf("aqa")<0&&n.indexOf("-image")<0;}); /* v100.1: fuera modelos de solo-voz/imagen/embeddings: no sirven para chat y un 400 suyo se confundia con llave mala */
       var ordered=[];
       pref.forEach(function(p){if(ok.indexOf(p)>=0)ordered.push(p);});
       ok.forEach(function(m){if(m.indexOf("flash")>=0&&m.indexOf("lite")<0&&ordered.indexOf(m)<0)ordered.push(m);});
@@ -122,7 +128,8 @@ async function sp12RefreshModels(key){
 }
 function sp12Human(st){
   if(st===503||st===429)return "Gemini está saturado en este momento (su nivel gratis se llena). Espera un minuto y pregúntame de nuevo.";
-  if(st===400||st===401||st===403)return "Google no aceptó la llave guardada. Pégala de nuevo en la tarjeta de arriba y toca Guardar.";
+  if(st===401||st===403)return "Google no aceptó la llave guardada. Pégala de nuevo en la tarjeta de arriba y toca Guardar.";
+  if(st===400)return "Ningún modelo de Gemini pudo con esa petición tal como está. Hazla más simple o divídela en partes e inténtalo de nuevo; tu llave está bien.";
   if(st===-1||st===0)return "Sin conexión en este momento. Revisa tu señal e inténtalo de nuevo.";
   if(st===451)return "Gemini bloqueó esa respuesta por sus filtros de seguridad. Reformula la pregunta e inténtalo de nuevo.";
   if(st===-3)return "Ningún modelo respondió a tiempo. Revisa tu señal e inténtalo de nuevo.";
@@ -134,6 +141,7 @@ async function askGemini(text){
   if(!key){bubble("ai","Gemini","Todavía no tengo llave en este iPhone. Créala gratis en aistudio.google.com/apikey y pégala arriba: tardo 1 minuto en encenderme.");return;}
   if(sp25Busy){var sp25q=setInterval(function(){if(!sp25Busy){clearInterval(sp25q);askGemini(text);}},700);return;}
   sp25Busy=true;
+  try{musaPillShow();}catch(x){}
   var __perf={t0:(window.performance&&performance.now)?performance.now():Date.now(),first:0};
   window.__musaMarkFirst=function(){if(!__perf.first)__perf.first=(window.performance&&performance.now)?performance.now():Date.now();};
   window.__musaPerfPush=function(ok){try{var a=[];try{a=JSON.parse(localStorage.getItem("musa_perf_v1")||"[]");}catch(e){}a.push({ttft:__perf.first?Math.round(__perf.first-__perf.t0):-1,total:Math.round(((window.performance&&performance.now)?performance.now():Date.now())-__perf.t0),ok:ok?1:0,ts:Date.now()});if(a.length>50)a=a.slice(a.length-50);localStorage.setItem("musa_perf_v1",JSON.stringify(a));}catch(e){}};
@@ -178,7 +186,7 @@ async function askGemini(text){
   }
   var maxM=Math.min(models.length,4); /* v100: la cadena Flash>Lite necesita un intento mas */
   var SYS="Eres Gemini, asistente del equipo de Crecer Digital. Tu jefa es Muse. Respondes en español, directo, útil y breve salvo que pidan detalle.";
-  function sp25Finish(acc){try{idbSet("spirit_chat_draft_v1",null);}catch(e){}sp25StopOff();sp25ActiveCtrl=null;if(window.__musaPerfPush)window.__musaPerfPush(true);gHist.push({who:"Gemini",text:acc});save(LS_G,gHist);bubble("ai","Gemini",acc);sp16Speak(acc);sp25Busy=false;}
+  function sp25Finish(acc){try{idbSet("spirit_chat_draft_v1",null);}catch(e){}sp25StopOff();sp25ActiveCtrl=null;if(window.__musaPerfPush)window.__musaPerfPush(true);gHist.push({who:"Gemini",text:acc});save(LS_G,gHist);bubble("ai","Gemini",acc);sp16Speak(acc);sp25Busy=false;try{musaPillHide();}catch(x){}}
   for(var mi=0;mi<maxM;mi++){
     var nextModel=false;
     var mr=0; /* v100: max. 3 reintentos por modelo */
@@ -219,7 +227,13 @@ async function askGemini(text){
           /* v100-V3: leer la causa real; llave/peticion mala no se cura rotando modelos */
           var errMsg="";try{var et=await r.text();var ej=JSON.parse(et);errMsg=(ej&&ej.error&&ej.error.message)||"";}catch(e){}
           if(errMsg)lastErr=errMsg.slice(0,180);
-          if(r.status===400||r.status===401||r.status===403){mi=maxM;nextModel=true;break;}
+          if(r.status===401||r.status===403){mi=maxM;nextModel=true;break;}
+          if(r.status===400){
+            if(/api.?key/i.test(errMsg)){mi=maxM;nextModel=true;break;} /* llave mala de verdad: no se cura rotando */
+            /* v100.1: 400 de capacidad del modelo (p. ej. un modelo sin chat multiturno): se marca muerto en la sesion y se prueba el siguiente, sin culpar a la llave */
+            var deadM=models[mi];models=models.filter(function(m){return m!==deadM;});
+            nextModel=true;break;
+          }
           nextModel=true;break;
         }
         sp25SetStatus("Gemini está escribiendo…");
@@ -290,7 +304,7 @@ async function askGemini(text){
         if(sp25UserCancel){
           sp25UserCancel=false;sp25ActiveCtrl=null;
           if(acc){if(liveEl){liveEl.remove();liveEl=null;liveBody=null;}sp25Finish(acc+"\n\n⏹ Detenido por ti: esto es lo que llegó.");}
-          else{sp24Done();sp25StopOff();sp25Busy=false;bubble("ai","Gemini","⏹ Detenido. Pregúntame otra cosa cuando quieras.");}
+          else{sp24Done();sp25StopOff();sp25Busy=false;try{musaPillHide();}catch(x){}bubble("ai","Gemini","⏹ Detenido. Pregúntame otra cosa cuando quieras.");}
           return;
         }
         if(acc){if(liveEl){liveEl.remove();liveEl=null;liveBody=null;}sp25Finish(acc+"\n\n⚠️ La conexión se cortó: esto es lo que llegó. Toca Regenerar para pedirla completa.");return;}
@@ -301,7 +315,7 @@ async function askGemini(text){
       }
     }
   }
-  sp24Done();sp25StopOff();sp25ActiveCtrl=null;sp25Busy=false;if(window.__musaPerfPush)window.__musaPerfPush(false);
+  sp24Done();sp25StopOff();sp25ActiveCtrl=null;sp25Busy=false;try{musaPillHide();}catch(x){}if(window.__musaPerfPush)window.__musaPerfPush(false);
   bubble("ai","Gemini",sp12Human(lastSt)+(lastErr?"\n\nDetalle de Google: "+lastErr:""));
   sp25AttachRetry(text);
 }
@@ -370,31 +384,35 @@ save=function(k,v){try{if(k===LS_G||k===LS_T){idbSet(k,v);try{localStorage.remov
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
   if(chat.parentNode!==document.body)document.body.appendChild(chat); /* v20: el chat cubre TODA la pantalla, como en Muse */
   var scr=document.createElement("div");scr.id="sp17call";
-  scr.innerHTML="<img id=\"sp17img\" src=\"avatar-gemini.png\" alt=\"\"><div id=\"sp17name\">Gemini</div><div id=\"sp17status\">Llamada en vivo</div><button id=\"sp17mic\" type=\"button\">\uD83C\uDFA4</button><button id=\"sp17end\" type=\"button\">Terminar llamada</button>";
+  scr.innerHTML="<img id=\"sp17img\" src=\"avatar-gemini.png\" alt=\"\"><div id=\"sp17name\">Gemini</div><div id=\"sp17status\">Llamada en vivo</div><div id=\"sp17note\"></div><button id=\"sp17mic\" type=\"button\">\uD83C\uDFA4</button><button id=\"sp17mute\" type=\"button\">Silenciar</button><button id=\"sp17end\" type=\"button\">Colgar</button>";
   chat.appendChild(scr);
-  var active=false,rec=null,waiting=false,prevVoice=SP16VOICE;
+  var active=false,rec=null,waiting=false,muted=false,speaking=false,errs=0,prevVoice=SP16VOICE,prevMode="gemini";
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   function st(t){$("sp17status").textContent=t;}
   function face(){var g=(mode==="gemini");$("sp17img").src=g?"avatar-gemini.png":"avatar-claude.png";$("sp17name").textContent=g?"Gemini":"Muse";}
-  function listen(){if(!active||waiting)return;if(!SR){st("Dicta con el microfono del teclado \uD83C\uDFA4 y la respuesta se escucha sola.");return;}
-    try{rec=new SR();rec.lang="es-US";rec.interimResults=false;
-      rec.onresult=function(ev){var t=ev.results[0][0].transcript;waiting=true;$("sp17mic").className="";st("Pensando\u2026");$("sp4input").value=t;$("sp4send").click();};
-      rec.onend=function(){if(active&&!waiting)setTimeout(listen,350);};
-      rec.onerror=function(){if(active&&!waiting)setTimeout(listen,600);};
-      $("sp17mic").className="live";st("Escuchando\u2026 habla ahora.");rec.start();
-    }catch(e){st("Toca el microfono y habla.");}}
+  function noLive(){st("Este navegador no permite escuchar en vivo; abre MUSA en Safari o desde tu pantalla de inicio para conversar por llamada. Mientras tanto, puedes dictar con el \uD83C\uDFA4 del chat.");$("sp17mic").className="";}
+  function listen(){if(!active||waiting||muted)return;if(!SR){noLive();return;}
+    try{rec=new SR();rec.lang="es-ES";rec.interimResults=false;
+      rec.onresult=function(ev){var t=ev.results[0][0].transcript;errs=0;waiting=true;$("sp17mic").className="";st("Pensando\u2026");$("sp4input").value=t;$("sp4send").click();};
+      rec.onend=function(){if(active&&!waiting&&!muted)setTimeout(listen,350);};
+      rec.onerror=function(ev){var er=ev&&ev.error;if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){noLive();return;}errs++;if(active&&!waiting&&!muted){if(errs>=3){st("Toca el micr\u00f3fono para hablar");$("sp17mic").className="";}else setTimeout(listen,600);}};
+      $("sp17mic").className="live";st("Escuchando\u2026");rec.start();
+    }catch(e){st("Toca el micr\u00f3fono para hablar");}}
   window.__sp17after=function(){if(!active)return;waiting=false;setTimeout(listen,300);};
-  function start(){active=true;prevVoice=SP16VOICE;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();scr.className="open";st("Llamada en vivo.");listen();}
-  function end(){active=false;waiting=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";}
+  window.__sp17speak=function(on){speaking=on;try{if(active){scr.className="open"+(on?" speaking":"");if(on)st("Hablando\u2026");}}catch(e){}};
+  setInterval(function(){if(active&&waiting&&!muted&&!speaking&&!sp25Busy){waiting=false;setTimeout(listen,400);}},2500);
+  function start(){active=true;muted=false;speaking=false;errs=0;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversaci\u00f3n en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");listen();}
+  function end(){active=false;waiting=false;muted=false;speaking=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
   var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.textContent="\uD83D\uDCDE";pb.setAttribute("aria-label","Llamada en vivo");
   pb.addEventListener("click",start);head.appendChild(pb);
-  $("sp17mic").addEventListener("click",function(){if(active&&!waiting)listen();});
+  $("sp17mic").addEventListener("click",function(){if(!active)return;if(muted){muted=false;$("sp17mute").textContent="Silenciar";}if(!waiting)listen();});
+  $("sp17mute").addEventListener("click",function(){if(!active)return;muted=!muted;if(muted){try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}$("sp17mic").className="";st("Micr\u00f3fono en silencio. Toca el micr\u00f3fono para seguir hablando.");$("sp17mute").textContent="Activar micr\u00f3fono";}else{$("sp17mute").textContent="Silenciar";if(!waiting)listen();}});
   $("sp17end").addEventListener("click",end);
 }catch(e){}})();
 
 /* MUSA v16: hablar igual — dictas, se envía solo, y la respuesta se escucha */
 var SP16VOICE=false;try{SP16VOICE=localStorage.getItem("musa_voz_auto")==="1";}catch(e){}
-function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.indexOf("es")===0;});if(vs.length)u.voice=vs[0];u.onend=function(){if(window.__sp17after)window.__sp17after();};speechSynthesis.speak(u);}catch(e){}}
+function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-ES";var vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.indexOf("es")===0;});if(vs.length)u.voice=vs[0];u.onstart=function(){if(window.__sp17speak)window.__sp17speak(true);};u.onend=function(){if(window.__sp17speak)window.__sp17speak(false);if(window.__sp17after)window.__sp17after();};u.onerror=function(){if(window.__sp17speak)window.__sp17speak(false);if(window.__sp17after)window.__sp17after();};speechSynthesis.speak(u);}catch(e){}}
 (function(){try{
   var head=$("sp4chat").querySelector(".sp4head");
   var vb=document.createElement("button");vb.type="button";vb.className="sp16gear";
@@ -452,7 +470,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
 }catch(e){}})();
 
 $("sp7menu").addEventListener("click",function(){var d=$("sp7drawer");d.className=(d.className==="open")?"":"open";});
-$("sp7share").addEventListener("click",function(){var u="https://crecerdigital.github.io/spirit-ia/";if(navigator.share){navigator.share({title:"MUSA",url:u}).catch(function(){});}else{copyText(u);alert("Enlace de MUSA copiado: "+u);}});
+$("sp7share").addEventListener("click",function(){var u="https://crecerdigital.github.io/spirit/";if(navigator.share){navigator.share({title:"MUSA",url:u}).catch(function(){});}else{copyText(u);alert("Enlace de MUSA copiado: "+u);}});
 Array.prototype.forEach.call(document.querySelectorAll("#sp7drawer button"),function(b){b.addEventListener("click",function(){var go=b.getAttribute("data-go");$("sp7drawer").className="";if(go==="chat")return;$("sp4chat").className="";setTimeout(function(){var s=document.getElementById(go);if(s)s.scrollIntoView({behavior:"smooth"});},60);});});
 $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("En esta vista, usa el micrófono de tu teclado: toca el campo de texto y luego el 🎤 del teclado.");return;}try{var r=new SR();r.lang="es-US";r.interimResults=false;r.onresult=function(ev){var t=ev.results[0][0].transcript;$("sp4input").value=($("sp4input").value+" "+t).trim();$("sp4send").click();};r.start();}catch(e){alert("No pude abrir el micrófono aquí; usa el 🎤 del teclado.");}});
   /* v100: indicador discreto de estado de red (auditoria Gemini) */
@@ -578,7 +596,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
       if(!head||!panel)return;
       Array.prototype.slice.call(head.querySelectorAll("button")).forEach(function(b){
         var al=b.getAttribute("aria-label")||"",tx=b.textContent||"";
-        if(al==="Llamada en vivo"||al==="Voz autom\u00e1tica"||tx.indexOf("\uD83D\uDCDE")>=0||tx.indexOf("\uD83D\uDD0A")>=0){panel.appendChild(b);}
+        if(al==="Voz autom\u00e1tica"||tx.indexOf("\uD83D\uDD0A")>=0){panel.appendChild(b);} /* v100.2: el boton de llamada se queda VISIBLE en la cabecera (paridad con la app de Muse); solo la voz automatica vive tras el engranaje */
       });
     }catch(e){}
   }
