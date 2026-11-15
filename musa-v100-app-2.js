@@ -10,7 +10,7 @@ function save(k,v){try{window.localStorage.setItem(k,JSON.stringify(v));}catch(e
 function getKey(){try{return window.localStorage.getItem(LS_KEY)||"";}catch(e){return "";}}
 var gHist=load(LS_G,[]), tHist=load(LS_T,[]);
 (function(){var bad=["is not found for API version","Call ModelService","No pude responder ahora:","supported for generateContent","not supported for generateContent"];function clean(a){return a.filter(function(m){var t=(m&&m.text)||"";for(var i=0;i<bad.length;i++){if(t.indexOf(bad[i])>=0)return false;}return true;});}var g2=clean(gHist),t2=clean(tHist);if(g2.length!==gHist.length){gHist=g2;save(LS_G,gHist);}if(t2.length!==tHist.length){tHist=t2;save(LS_T,tHist);}})();
-var SP6AV={"Muse":"🌅 ","ChatGPT":"💬 ","Gemini":"✨ ","Equipo":"🌅 "};
+var SP6AV={"Muse":"","ChatGPT":"","Gemini":"","Equipo":""};
 var SP8IMG={"Muse":"avatar-claude.png","ChatGPT":"avatar-chatgpt.png","Gemini":"avatar-gemini.png","Equipo":"avatar-claude.png"};
 function sp6speak(t){try{var u=new SpeechSynthesisUtterance(String(t).slice(0,600));u.lang="es-US";var vs=speechSynthesis.getVoices();for(var i=0;i<vs.length;i++){if(vs[i].lang&&vs[i].lang.indexOf("es")===0){u.voice=vs[i];break;}}speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 /* MUSA v72 (sp25): markdown sanitizado, scroll inteligente, estados por etapas, reintentos */
@@ -75,7 +75,7 @@ function bubble(list,who,text,extra){
   if(who!=="me"){
     actBtn("Copiar",function(b){copyText(text);b.textContent="¡Copiado!";setTimeout(function(){b.textContent="Copiar";},1500);});
     if(who==="Gemini"){actBtn("Regenerar",function(){sp25Regen();});}
-    actBtn("🔊 Escuchar",function(){sp6speak(text);});
+    actBtn("Escuchar",function(){sp6speak(text);});
   }
   box.appendChild(d);
   if(near||who==="me"){box.scrollTop=1e7;sp25ShowJump(false);}else{sp25ShowJump(true);}
@@ -96,7 +96,7 @@ function render(){
 }
 function keyState(){
   var k=getKey();
-  $("sp4keystate").innerHTML=k?"✅ <b>Gemini en vivo: ACTIVO</b> en este iPhone.":"🔑 <b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";
+  $("sp4keystate").innerHTML=k?"<b>Gemini en vivo: ACTIVO</b> en este iPhone.":"<b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";
   $("sp4keyrow").style.display=k?"none":"flex";
 }
 $("sp4savekey").addEventListener("click",function(){
@@ -154,7 +154,7 @@ async function askGemini(text){
   var dots=document.createElement("span");dots.className="sp25dots";dots.setAttribute("aria-hidden","true");dots.innerHTML="<i></i><i></i><i></i>";
   wd.appendChild(wst);wd.appendChild(dots);
   var near0=sp25Near(box);box.appendChild(wd);if(near0)box.scrollTop=1e7;else sp25ShowJump(true);
-  var stopB=document.createElement("button");stopB.id="sp25stop";stopB.type="button";stopB.textContent="⏹ Detener";
+  var stopB=document.createElement("button");stopB.id="sp25stop";stopB.type="button";stopB.textContent="Detener";
   stopB.style.cssText="display:block;margin:4px 0 8px auto;padding:5px 12px;border:1px solid #d9d9d9;border-radius:999px;background:#fff;color:#333;font-size:12px;cursor:pointer";
   stopB.addEventListener("click",function(){sp25Cancel();});
   box.appendChild(stopB);
@@ -303,8 +303,8 @@ async function askGemini(text){
         if(stallT)clearTimeout(stallT);
         if(sp25UserCancel){
           sp25UserCancel=false;sp25ActiveCtrl=null;
-          if(acc){if(liveEl){liveEl.remove();liveEl=null;liveBody=null;}sp25Finish(acc+"\n\n⏹ Detenido por ti: esto es lo que llegó.");}
-          else{sp24Done();sp25StopOff();sp25Busy=false;try{musaPillHide();}catch(x){}bubble("ai","Gemini","⏹ Detenido. Pregúntame otra cosa cuando quieras.");}
+          if(acc){if(liveEl){liveEl.remove();liveEl=null;liveBody=null;}sp25Finish(acc+"\n\nDetenido por ti: esto es lo que llegó.");}
+          else{sp24Done();sp25StopOff();sp25Busy=false;try{musaPillHide();}catch(x){}bubble("ai","Gemini","Detenido. Pregúntame otra cosa cuando quieras.");}
           return;
         }
         if(acc){if(liveEl){liveEl.remove();liveEl=null;liveBody=null;}sp25Finish(acc+"\n\n⚠️ La conexión se cortó: esto es lo que llegó. Toca Regenerar para pedirla completa.");return;}
@@ -328,7 +328,7 @@ $("sp4mGem").addEventListener("click",function(){mode="gemini";render();});
 $("sp4mTeam").addEventListener("click",function(){mode="team";render();});
 $("sp4btn").addEventListener("click",function(){$("sp4chat").className="open";render();});
 $("sp4close").addEventListener("click",function(){$("sp4chat").className="";});
-function sp5Chips(){try{var raw=localStorage.getItem("spiritia.v3.estado");if(!raw)return;var st=JSON.parse(raw);var ms=(st&&st.metrics)||[];var t="",f="",s="";ms.forEach(function(m){var u=((m.label||"")+" "+(m.value||"")).toLowerCase();if(u.indexOf("tablero")>=0)t=m.value;if(u.indexOf("fondo")>=0)f=m.value;if(u.indexOf("semana")>=0)s=m.value;});var c=$("sp5chips");if(c)c.innerHTML="<span>🌅 Tablero "+(t||"44%")+"</span><span>🎯 Fondo "+(f||"$0 / $20,000")+"</span><span>📅 Semana "+(s||"$0 / $400")+"</span>";}catch(e){}}
+function sp5Chips(){try{var raw=localStorage.getItem("spiritia.v3.estado");if(!raw)return;var st=JSON.parse(raw);var ms=(st&&st.metrics)||[];var t="",f="",s="";ms.forEach(function(m){var u=((m.label||"")+" "+(m.value||"")).toLowerCase();if(u.indexOf("tablero")>=0)t=m.value;if(u.indexOf("fondo")>=0)f=m.value;if(u.indexOf("semana")>=0)s=m.value;});var c=$("sp5chips");if(c)c.innerHTML="<span>Tablero "+(t||"44%")+"</span><span>Fondo "+(f||"$0 / $20,000")+"</span><span>Semana "+(s||"$0 / $400")+"</span>";}catch(e){}}
 sp5Chips();
 sp25JumpInit();
 setTimeout(function(){$("sp4chat").className="open";render();},400);
@@ -406,7 +406,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T){idbSet(k,v);try{localStorage.remov
   setInterval(function(){if(active&&waiting&&!muted&&!speaking&&!sp25Busy){waiting=false;setTimeout(listen,400);}},2500);
   function start(){active=true;muted=false;speaking=false;errs=0;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversaci\u00f3n en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");listen();}
   function end(){lclear();active=false;waiting=false;muted=false;speaking=false;SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
-  var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.textContent="\uD83D\uDCDE";pb.setAttribute("aria-label","Llamada en vivo");
+  var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.innerHTML="<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>";pb.setAttribute("aria-label","Llamada en vivo");
   pb.addEventListener("click",start);head.appendChild(pb);
   $("sp17mic").addEventListener("click",function(){if(!active)return;if(muted){muted=false;$("sp17mute").textContent="Silenciar";}if(!waiting)listen();});
   $("sp17mute").addEventListener("click",function(){if(!active)return;muted=!muted;if(muted){try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}$("sp17mic").className="";st("Micr\u00f3fono en silencio. Toca el micr\u00f3fono para seguir hablando.");$("sp17mute").textContent="Activar micr\u00f3fono";}else{$("sp17mute").textContent="Silenciar";if(!waiting)listen();}});
@@ -419,7 +419,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
 (function(){try{
   var head=$("sp4chat").querySelector(".sp4head");
   var vb=document.createElement("button");vb.type="button";vb.className="sp16gear";
-  function paint(){vb.textContent=SP16VOICE?"\uD83D\uDD0A":"\uD83D\uDD07";vb.style.opacity=SP16VOICE?"1":"0.55";}
+  var SPKON="<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.8-1-3.3-2.5-4v8c1.5-.7 2.5-2.2 2.5-4zM14 3.2v2.1c2.9.9 5 3.6 5 6.7s-2.1 5.8-5 6.7v2.1c3.9-1 7-4.6 7-8.8s-3.1-7.8-7-8.8z'/></svg>",SPKOFF="<svg viewBox='0 0 24 24' aria-hidden='true'><path fill='currentColor' d='M3 9v6h4l5 5V4L7 9H3z'/><path d='M16 9.5l5 5.5M21 9.5l-5 5.5' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' fill='none'/></svg>";function paint(){vb.innerHTML=SP16VOICE?SPKON:SPKOFF;vb.style.opacity=SP16VOICE?"1":"0.55";}
   vb.setAttribute("aria-label","Voz automática");
   vb.addEventListener("click",function(){SP16VOICE=!SP16VOICE;try{localStorage.setItem("musa_voz_auto",SP16VOICE?"1":"0");}catch(e){}paint();if(SP16VOICE)sp16Speak("Voz activada.");else try{speechSynthesis.cancel();}catch(e){}});
   head.appendChild(vb);paint();
@@ -454,7 +454,7 @@ function sp16Speak(t){try{if(!SP16VOICE||!window.speechSynthesis)return;speechSy
   if(md)panel.appendChild(md);
   if(kc)panel.appendChild(kc);
   var ch=$("sp5chips");if(ch)panel.appendChild(ch);
-  var gear=document.createElement("button");gear.type="button";gear.className="sp16gear";gear.textContent="\u2699";gear.setAttribute("aria-label","Ajustes del chat");
+  var gear=document.createElement("button");gear.type="button";gear.className="sp16gear";gear.innerHTML="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' aria-hidden='true'><path d='M3 6h9M18 6h3M3 12h3M12 12h9M3 18h11M20 18h1'/><circle cx='15' cy='6' r='2.2'/><circle cx='9' cy='12' r='2.2'/><circle cx='17' cy='18' r='2.2'/></svg>";gear.setAttribute("aria-label","Ajustes del chat");
   gear.addEventListener("click",function(){panel.className=(panel.className==="open")?"":"open";});
   head.appendChild(gear);
   /* v17: el panel nunca se abre solo */
@@ -504,7 +504,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
     function teAskPerm(){try{if(window.Notification&&Notification.permission==="default"){var p=Notification.requestPermission();if(p&&p.catch)p.catch(function(){});}}catch(e){}}
     function teRender(){
       var btn=$("sp100tasksBtn"),listEl=$("sp100taskList");
-      if(btn){var p=teTasks.filter(function(t){return t.status==="pending"||t.status==="running";}).length;btn.textContent="⏳ Tareas en segundo plano"+(p?" ("+p+")":"");}
+      if(btn){var p=teTasks.filter(function(t){return t.status==="pending"||t.status==="running";}).length;btn.textContent="Tareas en segundo plano"+(p?" ("+p+")":"");}
       if(!listEl)return;
       listEl.innerHTML="";
       if(!teTasks.length){listEl.innerHTML="<p class=\"sp100note\">Sin tareas todavía. Encola una pregunta y Gemini la responde aunque cambies de pantalla dentro de MUSA.</p>";return;}
@@ -580,7 +580,7 @@ $("sp6mic").addEventListener("click",function(){var SR=window.SpeechRecognition|
         inp.addEventListener("keydown",function(ev){if(ev.key==="Enter"){ev.preventDefault();add.click();}});
       }
       var dr=$("sp7drawer");
-      if(dr){var db2=document.createElement("button");db2.type="button";db2.textContent="⏳ Tareas en segundo plano";db2.addEventListener("click",function(){var d=$("sp7drawer");if(d)d.className="";var c=$("sp4chat");if(c)c.className="open";if(panel)panel.className="open";teRender();});dr.appendChild(db2);}
+      if(dr){var db2=document.createElement("button");db2.type="button";db2.textContent="Tareas en segundo plano";db2.addEventListener("click",function(){var d=$("sp7drawer");if(d)d.className="";var c=$("sp4chat");if(c)c.className="open";if(panel)panel.className="open";teRender();});dr.appendChild(db2);}
     }catch(e){}
     teAll().then(function(rows){
       teTasks=(rows||[]).filter(function(t){return t&&t.id;});
