@@ -425,7 +425,7 @@
         <label for="miDaySel">Día de práctica</label>
         <select id="miDaySel" aria-label="Día de práctica de la Semana 1"></select>
       </div>
-      <button class="btn primary" type="button" id="miStartBtn" style="border-color:var(--gemini);background:var(--gemini);color:#0b1020;">▶ Iniciar sesión de práctica</button>
+      <button class="btn primary" type="button" id="miStartBtn" style="border-color:var(--gemini);background:var(--gemini);color:#0b1020;">Iniciar sesión de práctica</button>
       <button class="btn" type="button" id="miEndBtn" disabled>Terminar sesión</button>
     </div>
 
@@ -498,6 +498,7 @@
     <button class="sp4mode on" id="sp4mGem" type="button">Gemini · EN VIVO</button>
     <button class="sp4mode" id="sp4mTeam" type="button">Equipo · Muse y ChatGPT</button>
     <button class="sp4mode" id="sp4mPol" type="button">Pollinations · EN VIVO</button>
+    <button class="sp4mode" id="sp4mOR" type="button" style="display:none">OpenRouter · EN VIVO</button>
   </div>
   <div id="sp4keycard">
     <div id="sp4keystate"></div>
@@ -506,6 +507,15 @@
       <button id="sp4savekey" type="button">Guardar</button>
     </div>
     <div style="margin-top:8px">La llave es <b>gratis</b> y se crea en 1 minuto con tu cuenta de Google: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> → «Create API key». Queda guardada <b>solo en tu iPhone</b>, dentro de esta app.</div>
+  </div>
+  <div id="sp4orcard">
+    <div id="sp4orstate"></div>
+    <div id="sp4orrow">
+      <input id="sp4orkey" type="password" placeholder="Pega aquí tu llave de OpenRouter (sk-or-…)" autocomplete="off">
+      <button id="sp4orsave" type="button">Guardar</button>
+    </div>
+    <div style="margin-top:8px">OpenRouter suma los modelos <b>gratuitos</b> de Llama, Qwen y DeepSeek a tu ejército. La llave es gratis y se crea con tu cuenta en <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>. Queda guardada <b>solo en tu iPhone</b>, dentro de esta app. Sin llave, OpenRouter no aparece en el selector: nada fingido.</div>
+    <button id="sp4orremove" type="button" style="display:none">Quitar llave de OpenRouter</button>
   </div>
   <div class="sp4note" id="sp4modeNote"></div>
   <div id="sp4msgs"></div>
