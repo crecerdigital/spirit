@@ -266,3 +266,12 @@ header.topbar{background:rgba(255,255,255,.88)}
 .sp16trio.five{gap:7px}
 .sp16trio.five img{width:34px;height:34px}
 .sp16trio.five span{font-size:9.5px}
+
+/* MUSA v105 · pegado inteligente de llaves: una sola casilla + comprobación en vivo */
+#sp5keycard{margin:10px 12px;background:#fbfbfb;border:1px solid #e8e8e8;border-radius:16px;padding:12px;font-size:13px;line-height:1.45;color:#333333}
+#sp16panel #sp5keycard{margin:8px 12px}
+#sp5keyrow{display:flex;gap:8px;margin-top:8px}
+#sp5key{flex:1;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;color:#1f1f1f;padding:9px;font-size:16px;min-width:0}
+#sp5savekey{background:#1f1f1f;color:#ffffff;border:none;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}
+#sp5keymsg{margin-top:8px;color:#444444;min-height:1.2em}
+#sp4keyremove{margin-top:10px;background:#f2f2f2;color:#1f1f1f;border:1px solid #e0e0e0;border-radius:999px;padding:7px 14px;font-size:12.5px;cursor:pointer}
