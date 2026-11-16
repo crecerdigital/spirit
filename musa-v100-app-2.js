@@ -99,25 +99,95 @@ function render(){
 }
 function keyState(){
   var k=getKey();
-  $("sp4keystate").innerHTML=k?"<b>Gemini en vivo: ACTIVO</b> en este iPhone.":"<b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";
-  $("sp4keyrow").style.display=k?"none":"flex";
+  sp5PlaceCard();
+  var rm=$("sp4keyremove");if(rm)rm.style.display=k?"inline-block":"none";
+  var row=$("sp4keyrow");if(row)row.style.display="none";
+  if(!k){$("sp4keystate").innerHTML="<b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";return;}
+  if(sp5GBad===k){$("sp4keystate").innerHTML="<b>Google no aceptó la llave guardada.</b> Pega la llave de Google (empieza con «AIza») en el campo de arriba y toca Guardar.";return;}
+  if(sp5GVrf()){$("sp4keystate").innerHTML="<b>Gemini en vivo: ACTIVO</b> en este iPhone.";return;}
+  $("sp4keystate").innerHTML="<b>Gemini: llave guardada en este iPhone.</b> Se comprueba sola: en cuanto Google responda, queda ACTIVO.";
+  if(sp5GCheckedFor!==k&&!sp5GCheckBusy){sp5GCheckedFor=k;sp5GCheckBusy=true;sp5CheckGemini(k).then(function(){sp5GCheckBusy=false;keyState();});}
 }
-$("sp4savekey").addEventListener("click",function(){
-  var v=$("sp4key").value.trim();
-  if(!v){alert("Pega primero tu llave de Gemini.");return;}
-  try{window.localStorage.setItem(LS_KEY,v);}catch(e){}
-  $("sp4key").value="";keyState();render();
-  bubble("ai","Gemini","Llave guardada en tu iPhone. Ya estoy en vivo: pregúntame lo que sea.");
-});
+/* MUSA v105 · PEGADO INTELIGENTE DE LLAVES + COMPROBACIÓN EN VIVO
+   Una sola casilla en Ajustes («Pega tu llave»): al guardar, la app clasifica
+   por el prefijo — «AIza» es de Google (Gemini) y «sk-or-» es de OpenRouter —
+   y la guarda en la clave de persistencia de SU servicio, nunca en la del
+   otro. Antes de decir ACTIVO, la llave se comprueba con una llamada real:
+   Gemini con ListModels y OpenRouter con /auth/key. Si el servicio la
+   rechaza, NO se guarda y la tarjeta lo dice claro. Las marcas de
+   comprobación (…_vrf) son claves NUEVAS: ninguna clave existente se
+   renombra ni se mueve. */
+var sp5GBad="",sp5OBad="",sp5GCheckedFor="",sp5OCheckedFor="",sp5GCheckBusy=false,sp5OCheckBusy=false;
+function sp5GVrf(){try{return window.localStorage.getItem("spirit_gemini_key_vrf")==="1";}catch(e){return false;}}
+function sp5OVrf(){try{return window.localStorage.getItem("spirit_openrouter_key_vrf")==="1";}catch(e){return false;}}
+function sp5Msg(t){var m=$("sp5keymsg");if(m)m.textContent=t;}
+function sp5PlaceCard(){try{var p=$("sp16panel"),c=$("sp5keycard"),kc=$("sp4keycard");if(p&&c&&c.parentNode!==p){if(kc&&kc.parentNode===p)p.insertBefore(c,kc);else p.appendChild(c);}}catch(e){}}
+async function sp5CheckGemini(key){
+  try{
+    var r=await sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models",{headers:{"x-goog-api-key":key}},10000);
+    if(r.ok){try{window.localStorage.setItem("spirit_gemini_key_vrf","1");}catch(e){}if(sp5GBad===key)sp5GBad="";return "ok";}
+    if(r.status===400||r.status===401||r.status===403){sp5GBad=key;try{window.localStorage.removeItem("spirit_gemini_key_vrf");}catch(e){}return "bad";}
+    return "net";
+  }catch(e){return "net";}
+}
+async function sp5CheckOR(key){
+  try{
+    var r=await sp24Fetch("https://openrouter.ai/api/v1/auth/key",{headers:{"Authorization":"Bearer "+key}},10000);
+    if(r.ok){try{window.localStorage.setItem("spirit_openrouter_key_vrf","1");}catch(e){}if(sp5OBad===key)sp5OBad="";return "ok";}
+    if(r.status===401||r.status===403){sp5OBad=key;try{window.localStorage.removeItem("spirit_openrouter_key_vrf");}catch(e){}return "bad";}
+    return "net";
+  }catch(e){return "net";}
+}
+(function(){try{
+  var sv=$("sp5savekey");
+  if(sv)sv.addEventListener("click",async function(){
+    var inp=$("sp5key");var v=((inp&&inp.value)||"").trim();
+    if(!v){sp5Msg("Pega primero tu llave en el campo.");return;}
+    if(v.indexOf("AIza")===0){
+      sp5Msg("Comprobando tu llave con Google…");
+      var res=await sp5CheckGemini(v);
+      if(res==="bad"){sp5Msg("Google no aceptó esta llave. Revisa que sea la llave de Google AI Studio, completa y sin espacios, y pégala de nuevo.");return;}
+      try{window.localStorage.setItem(LS_KEY,v);}catch(e){}
+      sp5GBad="";sp5GCheckedFor=v;inp.value="";
+      sp5Msg(res==="ok"?"Llave de Google aceptada y guardada: Gemini quedó ACTIVO.":"Llave de Gemini guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
+      keyState();render();
+      bubble("ai","Gemini",res==="ok"?"Llave de Google comprobada y guardada en tu iPhone. Ya estoy en vivo: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder.");
+      return;
+    }
+    if(v.indexOf("sk-or-")===0){
+      sp5Msg("Comprobando tu llave con OpenRouter…");
+      var res2=await sp5CheckOR(v);
+      if(res2==="bad"){sp5Msg("OpenRouter no aceptó esta llave. Revisa que sea la llave de OpenRouter, completa y sin espacios, y pégala de nuevo.");return;}
+      try{window.localStorage.setItem(LS_OK,v);}catch(e){}
+      sp5OBad="";sp5OCheckedFor=v;inp.value="";
+      sp5Msg(res2==="ok"?"Llave de OpenRouter aceptada y guardada: OpenRouter quedó ACTIVO.":"Llave de OpenRouter guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
+      oHist.push({who:"OpenRouter",text:res2==="ok"?"Llave de OpenRouter comprobada y guardada en tu iPhone. Ya estoy en vivo con los modelos gratuitos de Llama, Qwen y DeepSeek: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder."});save(LS_O,oHist);
+      mode="openrouter";orKeyState();render();
+      return;
+    }
+    sp5Msg("Esa llave no es de Google ni de OpenRouter: la de Google empieza con «AIza» y la de OpenRouter con «sk-or-». Pega una de esas dos.");
+  });
+  var grm=$("sp4keyremove");
+  if(grm)grm.addEventListener("click",function(){
+    try{window.localStorage.removeItem(LS_KEY);window.localStorage.removeItem("spirit_gemini_key_vrf");}catch(e){}
+    sp5GBad="";sp5GCheckedFor="";sp5Msg("");keyState();render();
+  });
+  var orm=$("sp4orremove");
+  if(orm)orm.addEventListener("click",function(){
+    try{window.localStorage.removeItem("spirit_openrouter_key_vrf");}catch(e){}
+    sp5OBad="";sp5OCheckedFor="";
+  });
+  (function sp5PlaceTry(n){sp5PlaceCard();var p=$("sp16panel"),c=$("sp5keycard");if((!p||(c&&c.parentNode!==p))&&(n||0)<24)setTimeout(function(){sp5PlaceTry((n||0)+1);},250);})(0);
+}catch(e){}})();
 var SP12DONE=false;
 async function sp12RefreshModels(key){
   /* v100-P1: el candado SP12DONE lo pone askGemini antes de llamar */
-  var pref=["gemini-flash-latest","gemini-2.5-flash","gemini-2.0-flash-001","gemini-2.0-flash"];
+  var pref=["gemini-flash-latest","gemini-3-flash-preview","gemini-3.1-flash-lite","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash-001","gemini-2.0-flash"]; /* v106: la familia 3.x de la documentacion vigente de Google va primero si la llave la ve en ListModels */
   try{
     var r=await sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models",{headers:{"x-goog-api-key":key}},8000);
     var d=await r.json();
-    if(r.ok&&d.models){
-      var ok=d.models.filter(function(m){return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0;}).map(function(m){return m.name.replace("models/","");}).filter(function(n){return n.indexOf("tts")<0&&n.indexOf("embedding")<0&&n.indexOf("aqa")<0&&n.indexOf("-image")<0;}); /* v100.1: fuera modelos de solo-voz/imagen/embeddings: no sirven para chat y un 400 suyo se confundia con llave mala */
+    if(r.ok&&d.models){try{window.localStorage.setItem("spirit_gemini_key_vrf","1");}catch(e){}if(sp5GBad===key)sp5GBad=""; /* v105: ListModels OK = llave de Gemini comprobada */
+      var ok=d.models.filter(function(m){return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0;}).map(function(m){return m.name.replace("models/","");}).filter(function(n){return n.indexOf("tts")<0&&n.indexOf("embedding")<0&&n.indexOf("aqa")<0&&n.indexOf("-image")<0&&n.indexOf("computer-use")<0&&n.indexOf("-live")<0&&n.indexOf("native-audio")<0&&n.indexOf("transcribe")<0&&n.indexOf("lyria")<0;}); /* v100.1: fuera modelos de solo-voz/imagen/embeddings: no sirven para chat y un 400 suyo se confundia con llave mala */
       var ordered=[];
       pref.forEach(function(p){if(ok.indexOf(p)>=0)ordered.push(p);});
       ok.forEach(function(m){if(m.indexOf("flash")>=0&&m.indexOf("lite")<0&&ordered.indexOf(m)<0)ordered.push(m);});
@@ -131,8 +201,8 @@ async function sp12RefreshModels(key){
 }
 function sp12Human(st){
   if(st===503||st===429)return "Gemini está saturado en este momento (su nivel gratis se llena). Espera un minuto y pregúntame de nuevo.";
-  if(st===401||st===403)return "Google no aceptó la llave guardada. Pégala de nuevo en la tarjeta de arriba y toca Guardar.";
-  if(st===400)return "Ningún modelo de Gemini pudo con esa petición tal como está. Hazla más simple o divídela en partes e inténtalo de nuevo; tu llave está bien.";
+  if(st===401||st===403)return "Google no aceptó la llave guardada. Pégala de nuevo en Ajustes (engranaje) y toca Guardar.";
+  if(st===400)return "Ningún modelo de Gemini pudo con esa petición tal como está. Hazla más simple o divídela en partes e inténtalo de nuevo.";
   if(st===-1||st===0)return "Sin conexión en este momento. Revisa tu señal e inténtalo de nuevo.";
   if(st===451)return "Gemini bloqueó esa respuesta por sus filtros de seguridad. Reformula la pregunta e inténtalo de nuevo.";
   if(st===-3)return "Ningún modelo respondió a tiempo. Revisa tu señal e inténtalo de nuevo.";
@@ -141,7 +211,7 @@ function sp12Human(st){
 function sp24Fetch(url,opts,ms){return new Promise(function(res,rej){var c=new AbortController();var t=setTimeout(function(){c.abort();},ms);var o={};for(var k in opts)o[k]=opts[k];o.signal=c.signal;fetch(url,o).then(function(r){clearTimeout(t);res(r);}).catch(function(e){clearTimeout(t);rej(e);});});}
 async function askGemini(text){
   var key=getKey();
-  if(!key){bubble("ai","Gemini","Todavía no tengo llave en este iPhone. Créala gratis en aistudio.google.com/apikey y pégala arriba: tardo 1 minuto en encenderme.");return;}
+  if(!key){bubble("ai","Gemini","Todavía no tengo llave en este iPhone. Créala gratis en aistudio.google.com/apikey y pégala en Ajustes (engranaje): tardo 1 minuto en encenderme.");return;}
   if(sp25Busy){var sp25q=setInterval(function(){if(!sp25Busy){clearInterval(sp25q);askGemini(text);}},700);return;}
   sp25Busy=true;
   try{musaPillShow();}catch(x){}
@@ -165,7 +235,7 @@ async function askGemini(text){
   function sp24Done(){var e=document.getElementById("sp24wait");if(e)e.remove();}
   /* v100-P1: no bloquear el primer token con ListModels; refresca en segundo plano */
   if(!SP12DONE){SP12DONE=true;sp12RefreshModels(key);}
-  var lastSt=0,lastErr="";
+  var lastSt=0,lastErr="",lastKeyBad=false;
   var tStart=Date.now();
   async function sp100Wait(ms,why){
     var end=Date.now()+ms;
@@ -230,9 +300,9 @@ async function askGemini(text){
           /* v100-V3: leer la causa real; llave/peticion mala no se cura rotando modelos */
           var errMsg="";try{var et=await r.text();var ej=JSON.parse(et);errMsg=(ej&&ej.error&&ej.error.message)||"";}catch(e){}
           if(errMsg)lastErr=errMsg.slice(0,180);
-          if(r.status===401||r.status===403){mi=maxM;nextModel=true;break;}
+          if(r.status===401||r.status===403){lastKeyBad=true;mi=maxM;nextModel=true;break;}
           if(r.status===400){
-            if(/api.?key/i.test(errMsg)){mi=maxM;nextModel=true;break;} /* llave mala de verdad: no se cura rotando */
+            if(/api.?key/i.test(errMsg)||/API_KEY_INVALID/.test(errMsg)){lastKeyBad=true;mi=maxM;nextModel=true;break;} /* llave mala de verdad: no se cura rotando */
             /* v100.1: 400 de capacidad del modelo (p. ej. un modelo sin chat multiturno): se marca muerto en la sesion y se prueba el siguiente, sin culpar a la llave */
             var deadM=models[mi];models=models.filter(function(m){return m!==deadM;});
             nextModel=true;break;
@@ -319,7 +389,8 @@ async function askGemini(text){
     }
   }
   sp24Done();sp25StopOff();sp25ActiveCtrl=null;sp25Busy=false;try{musaPillHide();}catch(x){}if(window.__musaPerfPush)window.__musaPerfPush(false);
-  bubble("ai","Gemini",sp12Human(lastSt)+(lastErr?"\n\nDetalle de Google: "+lastErr:""));
+  if(lastKeyBad){try{window.localStorage.removeItem("spirit_gemini_key_vrf");}catch(e){}sp5GBad=key;keyState();bubble("ai","Gemini","La llave de Gemini guardada no es válida: Google la rechazó. Pega en Ajustes (engranaje) la llave de Google — empieza con «AIza» — y toca Guardar.");}
+  else bubble("ai","Gemini",sp12Human(lastSt)+(lastErr?"\n\nDetalle de Google: "+lastErr:""));
   sp25AttachRetry(text);
 }
 
@@ -370,7 +441,21 @@ async function askPollinations(text){
    modelos gratuitos de OpenRouter (Llama, Qwen, DeepSeek) via su API
    compatible. Nada fingido: sin llave, el hueco solo existe como tarjeta
    en Ajustes para pegar la llave. */
-var SPOR_MODELS=["meta-llama/llama-3.3-70b-instruct:free","qwen/qwen3-235b-a22b:free","deepseek/deepseek-chat-v3.1:free","deepseek/deepseek-chat-v3-0324:free","google/gemini-2.0-flash-exp:free"];
+var SPOR_MODELS=["openrouter/free","nvidia/nemotron-3-ultra-550b-a55b:free","google/gemma-4-31b-it:free","inclusionai/ling-3.2-flash:free","baidu/ernie-5.5-flash-preview:free","nvidia/nemotron-3.5-lightning:free","google/gemma-4-26b-a4b-it:free"]; /* v106: respaldo fijo = catalogo gratuito de OpenRouter verificado el 2026-11-16; los 5 :free de v104/v105 ya no existen como gratuitos */
+var SPOR_DONE=false;
+async function spORRefreshModels(){ /* v106: descubrimiento en vivo del catalogo gratuito (sin llave: el catalogo es publico); si falla, queda el respaldo fijo de arriba */
+  try{
+    var r=await sp24Fetch("https://openrouter.ai/api/v1/models",{},8000);
+    var d=await r.json();
+    if(!r.ok||!d||!d.data)return;
+    var free=d.data.filter(function(m){var pr=m.pricing||{};return parseFloat(pr.prompt||"1")===0&&parseFloat(pr.completion||"1")===0;}).map(function(m){return m.id;}).filter(function(id){return id==="openrouter/free"||/:free$/.test(id);});
+    var pref=["openrouter/free","nvidia/nemotron-3-ultra-550b-a55b:free","google/gemma-4-31b-it:free","inclusionai/ling-3.2-flash:free","baidu/ernie-5.5-flash-preview:free","nvidia/nemotron-3.5-lightning:free","google/gemma-4-26b-a4b-it:free"];
+    var ordered=[];
+    pref.forEach(function(x){if(free.indexOf(x)>=0)ordered.push(x);});
+    free.forEach(function(x){if(ordered.indexOf(x)<0&&x.indexOf("lyria")<0)ordered.push(x);});
+    if(ordered.length)SPOR_MODELS=ordered;
+  }catch(e){}
+}
 var spORBuilt=false;
 function getORKey(){try{return window.localStorage.getItem(LS_OK)||"";}catch(e){return "";}}
 function spORSync(){try{
@@ -400,12 +485,16 @@ function orKeyState(){
   var panel=$("sp16panel"),card=$("sp4orcard");
   if(panel&&card&&card.parentNode!==panel)panel.appendChild(card);
   var stEl=$("sp4orstate"),row=$("sp4orrow"),mb=$("sp4mOR"),rm=$("sp4orremove");
-  if(stEl)stEl.innerHTML=k?"<b>OpenRouter en vivo: ACTIVO</b> en este iPhone (Llama, Qwen y DeepSeek gratuitos).":"<b>Tu llave de OpenRouter</b> — suma a Llama, Qwen y DeepSeek al ejército (se guarda solo en tu teléfono):";
-  if(row)row.style.display=k?"none":"flex";
+  if(stEl){if(!k)stEl.innerHTML="<b>Tu llave de OpenRouter</b> — suma a Llama, Qwen y DeepSeek al ejército (se guarda solo en tu teléfono):";
+    else if(sp5OBad===k)stEl.innerHTML="<b>OpenRouter no aceptó la llave guardada.</b> Pega la llave de OpenRouter (empieza con «sk-or-») en el campo de arriba y toca Guardar.";
+    else if(sp5OVrf())stEl.innerHTML="<b>OpenRouter en vivo: ACTIVO</b> en este iPhone (Llama, Qwen y DeepSeek gratuitos).";
+    else stEl.innerHTML="<b>OpenRouter: llave guardada en este iPhone.</b> Se comprueba sola: en cuanto OpenRouter responda, queda ACTIVO.";}
+  if(row)row.style.display="none";
   if(rm)rm.style.display=k?"inline-block":"none";
   if(k)spORBuildTrio();
   if(mb)mb.style.display=k?"":"none";
   Array.prototype.forEach.call(document.querySelectorAll('[data-or="1"]'),function(b){b.style.display=k?"":"none";});
+  if(k&&sp5OBad!==k&&!sp5OVrf()&&sp5OCheckedFor!==k&&!sp5OCheckBusy){sp5OCheckedFor=k;sp5OCheckBusy=true;sp5CheckOR(k).then(function(){sp5OCheckBusy=false;orKeyState();});}
 }
 (function(){try{
   var sv=$("sp4orsave");
@@ -448,6 +537,7 @@ async function askOpenRouter(text){
   oHist.filter(function(m){return m.who==="me"||m.who==="OpenRouter";}).slice(-8).forEach(function(m){msgs.push({role:m.who==="me"?"user":"assistant",content:m.text});});
   msgs.push({role:"user",content:text});
   var lastSt=0,acc="";
+  if(!SPOR_DONE){SPOR_DONE=true;await spORRefreshModels();} /* v106: catalogo fresco una vez por sesion */
   for(var oi=0;oi<SPOR_MODELS.length&&!acc;oi++){
     if(sp25UserCancel)break;
     try{
@@ -463,10 +553,14 @@ async function askOpenRouter(text){
   clearTimeout(to);spODone();sp25ActiveCtrl=null;sp25Busy=false;
   if(sp25UserCancel){sp25UserCancel=false;bubble("ai","OpenRouter","Detenido. Pregúntame otra cosa cuando quieras.");return;}
   if(!acc){
-    if(lastSt===401||lastSt===403){bubble("ai","OpenRouter","OpenRouter no aceptó la llave guardada. Pégala de nuevo en Ajustes (engranaje) y toca Guardar.");return;}
-    bubble("ai","OpenRouter","No pude responder ahora: los modelos gratuitos de OpenRouter a veces se saturan. Inténtalo de nuevo en un momento.");
+    if(lastSt===401||lastSt===403){try{window.localStorage.removeItem("spirit_openrouter_key_vrf");}catch(e){}sp5OBad=key;orKeyState();bubble("ai","OpenRouter","La llave de OpenRouter guardada no fue aceptada: no es válida para OpenRouter. Pega en Ajustes (engranaje) la llave de OpenRouter — empieza con «sk-or-» — y toca Guardar.");return;}
+    if(lastSt===429){bubble("ai","OpenRouter","Los modelos gratuitos de OpenRouter están saturados ahora mismo (límite del nivel gratis). Espera un minuto e inténtalo de nuevo.");spOAttachRetry(text);return;}
+    if(lastSt===200){bubble("ai","OpenRouter","Los modelos gratuitos de OpenRouter no devolvieron respuesta esta vez. Inténtalo de nuevo en un momento.");spOAttachRetry(text);return;}
+    if(lastSt>0){bubble("ai","OpenRouter","OpenRouter devolvió un error (código "+lastSt+") y ningún modelo gratuito pudo responder. Inténtalo de nuevo en un momento.");spOAttachRetry(text);return;}
+    bubble("ai","OpenRouter","Sin conexión con OpenRouter en este momento. Revisa tu señal e inténtalo de nuevo.");
     spOAttachRetry(text);return;
   }
+  try{window.localStorage.setItem("spirit_openrouter_key_vrf","1");}catch(e){} /* v105: respuesta real = llave de OpenRouter comprobada */
   oHist.push({who:"OpenRouter",text:acc});save(LS_O,oHist);bubble("ai","OpenRouter",acc);sp16Speak(acc);
 }
 $("sp4send").addEventListener("click",function(){
@@ -551,16 +645,20 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   var route="sr",lfast=0,lstop=false,lwatch=null;
   var mr=null,mrStream=null,mrChunks=[],mrMime="",mrBusy=false,mrHeard=false,mrAnalyserOn=false,mrMaxT=null,mrSilT=null,mrCtx=null,mrAnalyser=null,mrSilenceSince=0;
+  var mrPermNote=false; /* v105: el aviso previo de permiso de micrófono se muestra una sola vez por llamada */
   function st(t){$("sp17status").textContent=t;}
+  function sp17InApp(){try{var ua=navigator.userAgent||"";if(/FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat/i.test(ua))return true;if(/iPhone|iPad|iPod/.test(ua)&&/AppleWebKit/.test(ua)&&!/Safari\//.test(ua))return true;return false;}catch(e){return false;}}
+  function sp17VoiceBlocked(){var hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);var hasRec=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&typeof MediaRecorder!=="undefined");return !hasSR&&!hasRec;}
+  function sp17SafariAviso(){lclear();$("sp17mic").className="";st("En esta vista el micrófono está bloqueado.");$("sp17note").textContent="Estás dentro de otra app: iOS bloquea el micrófono de la web en esta vista y la llamada no puede escucharte. Abre MUSA en Safari (Compartir o los tres puntos → «Abrir en Safari») y toca la llamada otra vez. Si en Safari Gemini te pide la llave, pégala una sola vez tocando el engranaje de Ajustes: queda guardada en Safari.";}
   function face(){var g=(mode==="gemini");$("sp17img").src=g?"avatar-gemini.png":"avatar-claude.png";$("sp17name").textContent=g?"Gemini":"Muse";}
   function english(){try{for(var i=gHist.length-1;i>=0&&i>=gHist.length-8;i--){var t=(gHist[i]&&gHist[i].text)||"";if(t.indexOf("entrenador de inglés")>=0||t.indexOf("entrenador de ingles")>=0)return true;}}catch(e){}return false;}
   function lclear(){if(lwatch){clearTimeout(lwatch);lwatch=null;}}
-  function finalFail(){lclear();$("sp17mic").className="";st("No te escuché; revisa el micrófono. Toca el micrófono para intentarlo de nuevo.");}
+  function finalFail(){lclear();$("sp17mic").className="";if(sp17VoiceBlocked()||sp17InApp()){sp17SafariAviso();return;}st("No te escuché; revisa el micrófono. Toca el micrófono para intentarlo de nuevo.");}
   function stopTracks(){if(mrStream){try{mrStream.getTracks().forEach(function(tr){tr.stop();});}catch(e){}mrStream=null;}}
   function mrCleanup(){if(mrMaxT){clearTimeout(mrMaxT);mrMaxT=null;}if(mrSilT){clearInterval(mrSilT);mrSilT=null;}if(mrCtx){try{mrCtx.close();}catch(e){}mrCtx=null;}mrAnalyser=null;mrAnalyserOn=false;stopTracks();}
   function stopRec(){if(mrMaxT){clearTimeout(mrMaxT);mrMaxT=null;}if(mrSilT){clearInterval(mrSilT);mrSilT=null;}try{if(mr&&mr.state!=="inactive")mr.stop();}catch(e){mrCleanup();mrBusy=false;}}
   function switchToRec(){if(route==="rec")return;route="rec";lclear();lstop=true;try{if(rec)rec.abort();}catch(e){}if(active&&!waiting&&!muted)setTimeout(listen,150);}
-  function listen(){if(!active||waiting||muted)return;if(route==="rec"){listenRec();return;}if(!SR){route="rec";listenRec();return;}
+  function listen(){if(!active||waiting||muted)return;if(!getKey()){lclear();$("sp17mic").className="";st("Sin tu llave de Gemini no puedo escucharte: pégala una vez en Ajustes (engranaje). Mientras tanto, escríbeme por texto en el chat.");return;}if(route==="rec"){listenRec();return;}if(!SR){route="rec";listenRec();return;}
     try{rec=new SR();rec.lang=english()?"en-US":"es-ES";rec.interimResults=false;var t0=Date.now(),got=false;
       rec.onresult=function(ev){got=true;lclear();var t=ev.results[0][0].transcript;errs=0;lfast=0;waiting=true;$("sp17mic").className="";st("Pensando…");$("sp4input").value=t;$("sp4send").click();};
       rec.onend=function(){lclear();if(lstop){lstop=false;return;}if(active&&!waiting&&!muted){if(!got&&(Date.now()-t0)<700){lfast++;if(lfast>=3){switchToRec();return;}}else lfast=0;setTimeout(listen,350);}};
@@ -571,9 +669,11 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
   function listenRec(){
     if(!active||waiting||muted||mrBusy||sp25Busy)return;
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==="undefined"){finalFail();return;}
-    if(!getKey()){st("La llamada por grabación necesita tu llave de Gemini: pégala en Ajustes (engranaje) y vuelve a intentarlo.");$("sp17mic").className="";return;}
+    if(!getKey()){st("Sin tu llave de Gemini no puedo escucharte: pégala una vez en Ajustes (engranaje). Mientras tanto, escríbeme por texto en el chat.");$("sp17mic").className="";return;}
     mrBusy=true;mrHeard=false;mrChunks=[];mrAnalyserOn=false;
-    st("Escuchando…");$("sp17mic").className="live";
+    if(!mrPermNote){mrPermNote=true;$("sp17note").textContent="Para escucharte por grabación, el iPhone te pedirá permiso para el micrófono una sola vez: toca «Permitir». El micrófono solo se usa dentro de esta llamada.";st("Activando el micrófono…");}
+    else st("Escuchando…");
+    $("sp17mic").className="live";
     navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
       if(!active||muted){mrBusy=false;try{stream.getTracks().forEach(function(tr){tr.stop();});}catch(e){}return;}
       mrStream=stream;
@@ -612,7 +712,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
     }).catch(function(){mrBusy=false;finalFail();});
   }
   function sendAudioTurn(blob){
-    waiting=true;sp25Busy=true;$("sp17mic").className="";st("Pensando…");
+    waiting=true;sp25Busy=true;$("sp17mic").className="";st("Entendiendo tu voz…");
     var key=getKey();
     var fr=new FileReader();
     fr.onerror=function(){mrBusy=false;sp25Busy=false;waiting=false;finalFail();};
@@ -628,13 +728,18 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
       function fail(stCode){
         mrBusy=false;sp25Busy=false;waiting=false;
         if(stCode===401||stCode===403){st("Google no aceptó la llave guardada. Pégala de nuevo en Ajustes y vuelve a intentarlo.");$("sp17mic").className="";return;}
+        if(stCode===400){st("Google no aceptó la llave guardada: no es válida. Pega en Ajustes (engranaje) la llave de Google — empieza con «AIza» — y vuelve a intentarlo.");$("sp17mic").className="";return;}
+        if(stCode===-9){st("Tardé demasiado en entenderte: la conexión está lenta. Toca el micrófono para intentarlo de nuevo.");$("sp17mic").className="";return;}
         finalFail();
       }
+      var t0A=Date.now();
       function attempt(){
         if(idx>=list.length){fail(0);return;}
+        if(Date.now()-t0A>50000){fail(-9);return;}
+        if(idx>0)st("Entendiendo tu voz… (otro intento)");
         var m=list[idx++];
         sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:ctx,generationConfig:{responseMimeType:"application/json"}})},30000).then(function(r){
-          if(!r.ok){if(r.status===401||r.status===403){fail(r.status);return;}attempt();return;}
+          if(!r.ok){if(r.status===401||r.status===403){fail(r.status);return;}if(r.status===400){return r.text().then(function(et){if(/api.?key/i.test(et||"")){fail(400);return;}attempt();});}attempt();return;}
           return r.json();
         }).then(function(d){
           if(!d)return;
@@ -660,7 +765,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
   window.__sp17after=function(){if(!active)return;waiting=false;setTimeout(listen,300);};
   window.__sp17speak=function(on){speaking=on;try{if(active){scr.className="open"+(on?" speaking":"");if(on)st("Hablando…");}}catch(e){}};
   setInterval(function(){if(active&&waiting&&!muted&&!speaking&&!sp25Busy){waiting=false;setTimeout(listen,400);}},2500);
-  function start(){active=true;muted=false;speaking=false;errs=0;lfast=0;route="sr";mrBusy=false;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversación en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");listen();}
+  function start(){active=true;muted=false;speaking=false;errs=0;lfast=0;route="sr";mrBusy=false;mrPermNote=false;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversación en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");if(sp17VoiceBlocked()){sp17SafariAviso();return;}listen();}
   function end(){lclear();stopRec();mrCleanup();mrBusy=false;active=false;waiting=false;muted=false;speaking=false;route="sr";SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
   var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.innerHTML="<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>";pb.setAttribute("aria-label","Llamada en vivo");
   pb.addEventListener("click",start);head.appendChild(pb);
