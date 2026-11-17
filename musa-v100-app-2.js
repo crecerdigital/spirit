@@ -103,20 +103,30 @@ function keyState(){
   var rm=$("sp4keyremove");if(rm)rm.style.display=k?"inline-block":"none";
   var row=$("sp4keyrow");if(row)row.style.display="none";
   if(!k){$("sp4keystate").innerHTML="<b>Tu llave gratuita de Gemini</b> (se guarda solo en tu teléfono):";return;}
-  if(sp5GBad===k){$("sp4keystate").innerHTML="<b>Google no aceptó la llave guardada.</b> Pega la llave de Google (empieza con «AIza») en el campo de arriba y toca Guardar.";return;}
+  if(sp5GBad===k){$("sp4keystate").innerHTML="<b>Google no aceptó la llave guardada.</b> Pega la llave de Google en el campo de arriba y toca Guardar: la app la comprueba sola.";return;}
   if(sp5GVrf()){$("sp4keystate").innerHTML="<b>Gemini en vivo: ACTIVO</b> en este iPhone.";return;}
   $("sp4keystate").innerHTML="<b>Gemini: llave guardada en este iPhone.</b> Se comprueba sola: en cuanto Google responda, queda ACTIVO.";
   if(sp5GCheckedFor!==k&&!sp5GCheckBusy){sp5GCheckedFor=k;sp5GCheckBusy=true;sp5CheckGemini(k).then(function(){sp5GCheckBusy=false;keyState();});}
 }
 /* MUSA v105 · PEGADO INTELIGENTE DE LLAVES + COMPROBACIÓN EN VIVO
-   Una sola casilla en Ajustes («Pega tu llave»): al guardar, la app clasifica
-   por el prefijo — «AIza» es de Google (Gemini) y «sk-or-» es de OpenRouter —
-   y la guarda en la clave de persistencia de SU servicio, nunca en la del
-   otro. Antes de decir ACTIVO, la llave se comprueba con una llamada real:
-   Gemini con ListModels y OpenRouter con /auth/key. Si el servicio la
-   rechaza, NO se guarda y la tarjeta lo dice claro. Las marcas de
+   Una sola casilla en Ajustes («Pega tu llave»): al guardar, la app
+   comprueba la llave EN VIVO y la guarda en la clave de persistencia
+   del servicio que la ACEPTA, nunca en la del otro. Antes de decir
+   ACTIVO, la llave se comprueba con una llamada real: Gemini con
+   ListModels y OpenRouter con /auth/key. Si el servicio la rechaza,
+   NO se guarda y la tarjeta lo dice claro. Las marcas de
    comprobación (…_vrf) son claves NUEVAS: ninguna clave existente se
-   renombra ni se mueve. */
+   renombra ni se mueve.
+   MUSA v107 · SIN PUERTA DE PREFIJO: hasta v106 la casilla clasificaba
+   por el prefijo («AIza» / «sk-or-») y RECHAZABA sin guardar cualquier
+   llave sin esos prefijos (así cayó la llave real del dueño en su
+   reprueba del 2026-11-16). Desde v107 la llave pegada se prueba en
+   vivo, en orden: primero Google y, si Google la rechaza, OpenRouter.
+   Se guarda solo donde el servicio la acepte. El prefijo queda solo
+   como pista para el guardado «sin comprobar» cuando un servicio no
+   responde y el dueño del prefijo no la rechazó; sin prefijo y sin
+   comprobación posible no se guarda nada: se pide reintentar con
+   conexión. */
 var sp5GBad="",sp5OBad="",sp5GCheckedFor="",sp5OCheckedFor="",sp5GCheckBusy=false,sp5OCheckBusy=false;
 function sp5GVrf(){try{return window.localStorage.getItem("spirit_gemini_key_vrf")==="1";}catch(e){return false;}}
 function sp5OVrf(){try{return window.localStorage.getItem("spirit_openrouter_key_vrf")==="1";}catch(e){return false;}}
@@ -143,29 +153,45 @@ async function sp5CheckOR(key){
   if(sv)sv.addEventListener("click",async function(){
     var inp=$("sp5key");var v=((inp&&inp.value)||"").trim();
     if(!v){sp5Msg("Pega primero tu llave en el campo.");return;}
-    if(v.indexOf("AIza")===0){
-      sp5Msg("Comprobando tu llave con Google…");
-      var res=await sp5CheckGemini(v);
-      if(res==="bad"){sp5Msg("Google no aceptó esta llave. Revisa que sea la llave de Google AI Studio, completa y sin espacios, y pégala de nuevo.");return;}
+    function saveGemini(verified){
       try{window.localStorage.setItem(LS_KEY,v);}catch(e){}
       sp5GBad="";sp5GCheckedFor=v;inp.value="";
-      sp5Msg(res==="ok"?"Llave de Google aceptada y guardada: Gemini quedó ACTIVO.":"Llave de Gemini guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
+      sp5Msg(verified?"Llave de Google aceptada y guardada: Gemini quedó ACTIVO.":"Llave de Gemini guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
       keyState();render();
-      bubble("ai","Gemini",res==="ok"?"Llave de Google comprobada y guardada en tu iPhone. Ya estoy en vivo: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder.");
-      return;
+      bubble("ai","Gemini",verified?"Llave de Google comprobada y guardada en tu iPhone. Ya estoy en vivo: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder.");
     }
-    if(v.indexOf("sk-or-")===0){
-      sp5Msg("Comprobando tu llave con OpenRouter…");
-      var res2=await sp5CheckOR(v);
-      if(res2==="bad"){sp5Msg("OpenRouter no aceptó esta llave. Revisa que sea la llave de OpenRouter, completa y sin espacios, y pégala de nuevo.");return;}
+    function saveOR(verified){
       try{window.localStorage.setItem(LS_OK,v);}catch(e){}
       sp5OBad="";sp5OCheckedFor=v;inp.value="";
-      sp5Msg(res2==="ok"?"Llave de OpenRouter aceptada y guardada: OpenRouter quedó ACTIVO.":"Llave de OpenRouter guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
-      oHist.push({who:"OpenRouter",text:res2==="ok"?"Llave de OpenRouter comprobada y guardada en tu iPhone. Ya estoy en vivo con los modelos gratuitos de Llama, Qwen y DeepSeek: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder."});save(LS_O,oHist);
+      sp5Msg(verified?"Llave de OpenRouter aceptada y guardada: OpenRouter quedó ACTIVO.":"Llave de OpenRouter guardada. Sin conexión para comprobarla ahora: se comprueba sola al enviar tu primer mensaje.");
+      oHist.push({who:"OpenRouter",text:verified?"Llave de OpenRouter comprobada y guardada en tu iPhone. Ya estoy en vivo con los modelos gratuitos de Llama, Qwen y DeepSeek: pregúntame lo que sea.":"Llave guardada en tu iPhone: pregúntame lo que sea y me compruebo al responder."});save(LS_O,oHist);
       mode="openrouter";orKeyState();render();
+    }
+    /* v107: clasificacion por COMPROBACION EN VIVO, jamas por prefijo:
+       primero Google (ListModels); si Google la rechaza, OpenRouter
+       (/auth/key). Se guarda solo donde el servicio la ACEPTE, con la
+       marca de comprobacion que pone la propia funcion de chequeo. */
+    sp5Msg("Comprobando tu llave con Google…");
+    var resG=await sp5CheckGemini(v);
+    if(resG==="ok"){saveGemini(true);return;}
+    sp5Msg("Comprobando tu llave con OpenRouter…");
+    var resO=await sp5CheckOR(v);
+    if(resO==="ok"){saveOR(true);return;}
+    if(resG==="bad"&&resO==="bad"){
+      sp5Msg("Esa llave no la aceptó ni Google ni OpenRouter. Revisa que la copiaste completa y pégala de nuevo.");
       return;
     }
-    sp5Msg("Esa llave no es de Google ni de OpenRouter: la de Google empieza con «AIza» y la de OpenRouter con «sk-or-». Pega una de esas dos.");
+    /* Ninguno la confirmo y al menos uno no respondio (sin conexion o
+       respuesta rara): guardado «sin comprobar» SOLO si el prefijo
+       indica el servicio y ESE servicio no la rechazo (patron v106).
+       Sin prefijo y sin comprobacion posible: no se guarda nada. */
+    if(resG!=="bad"&&v.indexOf("AIza")===0){saveGemini(false);return;}
+    if(resO!=="bad"&&v.indexOf("sk-or-")===0){saveOR(false);return;}
+    if(resG==="bad"||resO==="bad"){
+      sp5Msg((resG==="bad"?"Google":"OpenRouter")+" no aceptó esta llave y el otro servicio no respondió para comprobarla. Revisa que la copiaste completa y pégala de nuevo.");
+      return;
+    }
+    sp5Msg("Sin conexión no pude comprobar tu llave. Revisa tu señal y toca Guardar de nuevo.");
   });
   var grm=$("sp4keyremove");
   if(grm)grm.addEventListener("click",function(){
@@ -486,7 +512,7 @@ function orKeyState(){
   if(panel&&card&&card.parentNode!==panel)panel.appendChild(card);
   var stEl=$("sp4orstate"),row=$("sp4orrow"),mb=$("sp4mOR"),rm=$("sp4orremove");
   if(stEl){if(!k)stEl.innerHTML="<b>Tu llave de OpenRouter</b> — suma a Llama, Qwen y DeepSeek al ejército (se guarda solo en tu teléfono):";
-    else if(sp5OBad===k)stEl.innerHTML="<b>OpenRouter no aceptó la llave guardada.</b> Pega la llave de OpenRouter (empieza con «sk-or-») en el campo de arriba y toca Guardar.";
+    else if(sp5OBad===k)stEl.innerHTML="<b>OpenRouter no aceptó la llave guardada.</b> Pega la llave de OpenRouter en el campo de arriba y toca Guardar: la app la comprueba sola.";
     else if(sp5OVrf())stEl.innerHTML="<b>OpenRouter en vivo: ACTIVO</b> en este iPhone (Llama, Qwen y DeepSeek gratuitos).";
     else stEl.innerHTML="<b>OpenRouter: llave guardada en este iPhone.</b> Se comprueba sola: en cuanto OpenRouter responda, queda ACTIVO.";}
   if(row)row.style.display="none";
