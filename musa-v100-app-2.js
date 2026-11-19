@@ -661,6 +661,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
    rutas fallan, la pantalla lo dice claro y ofrece reintentar. La practica
    de ingles usa esta misma tuberia: el contexto de la sesion vive en el
    historial del chat y el audio se transcribe en el idioma que se hable. */
+/* v109 (2026-11-18): iOS entra directo por GRABACION (el reconocimiento de voz de iOS en vistas web no es confiable); getUserMedia con limite de 10 s y mensajes distintos segun la causa (permiso denegado / vista dentro de otra app / sin respuesta); el analizador de silencio solo manda si su contexto de audio esta corriendo — si iOS lo deja suspendido decide el tamano de la grabacion, porque antes se descartaba audio bueno y la llamada «no escuchaba»; deteccion de vista dentro de otra app por falta de «Version/» en el agente de usuario, con excepcion de la app instalada (standalone). */
 (function(){try{
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
   if(chat.parentNode!==document.body)document.body.appendChild(chat); /* v20: el chat cubre TODA la pantalla, como en Muse */
@@ -673,7 +674,8 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
   var mr=null,mrStream=null,mrChunks=[],mrMime="",mrBusy=false,mrHeard=false,mrAnalyserOn=false,mrMaxT=null,mrSilT=null,mrCtx=null,mrAnalyser=null,mrSilenceSince=0;
   var mrPermNote=false; /* v105: el aviso previo de permiso de micrófono se muestra una sola vez por llamada */
   function st(t){$("sp17status").textContent=t;}
-  function sp17InApp(){try{var ua=navigator.userAgent||"";if(/FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat/i.test(ua))return true;if(/iPhone|iPad|iPod/.test(ua)&&/AppleWebKit/.test(ua)&&!/Safari\//.test(ua))return true;return false;}catch(e){return false;}}
+  function sp17InApp(){try{if(window.navigator&&window.navigator.standalone===true)return false;var ua=navigator.userAgent||"";if(/FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat/i.test(ua))return true;if(/iPhone|iPad|iPod/.test(ua)&&/AppleWebKit/.test(ua)&&!/Version\//.test(ua))return true;return false;}catch(e){return false;}}
+  function sp17IOS(){try{return /iPhone|iPad|iPod/.test(navigator.userAgent||"");}catch(e){return false;}}
   function sp17VoiceBlocked(){var hasSR=!!(window.SpeechRecognition||window.webkitSpeechRecognition);var hasRec=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&typeof MediaRecorder!=="undefined");return !hasSR&&!hasRec;}
   function sp17SafariAviso(){lclear();$("sp17mic").className="";st("En esta vista el micrófono está bloqueado.");$("sp17note").textContent="Estás dentro de otra app: iOS bloquea el micrófono de la web en esta vista y la llamada no puede escucharte. Abre MUSA en Safari (Compartir o los tres puntos → «Abrir en Safari») y toca la llamada otra vez. Si en Safari Gemini te pide la llave, pégala una sola vez tocando el engranaje de Ajustes: queda guardada en Safari.";}
   function face(){var g=(mode==="gemini");$("sp17img").src=g?"avatar-gemini.png":"avatar-claude.png";$("sp17name").textContent=g?"Gemini":"Muse";}
@@ -700,7 +702,11 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
     if(!mrPermNote){mrPermNote=true;$("sp17note").textContent="Para escucharte por grabación, el iPhone te pedirá permiso para el micrófono una sola vez: toca «Permitir». El micrófono solo se usa dentro de esta llamada.";st("Activando el micrófono…");}
     else st("Escuchando…");
     $("sp17mic").className="live";
-    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var gumDead=false;
+    var gumP=navigator.mediaDevices.getUserMedia({audio:true});
+    gumP.then(function(s){if(gumDead){try{s.getTracks().forEach(function(tr){tr.stop();});}catch(e){}}},function(){});
+    var gumT=new Promise(function(_,rej){setTimeout(function(){rej(new Error("gum-timeout"));},10000);});
+    Promise.race([gumP,gumT]).then(function(stream){
       if(!active||muted){mrBusy=false;try{stream.getTracks().forEach(function(tr){tr.stop();});}catch(e){}return;}
       mrStream=stream;
       var prefs=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
@@ -722,9 +728,12 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
         if(AC){mrCtx=new AC();if(mrCtx.state==="suspended")mrCtx.resume();
           var src=mrCtx.createMediaStreamSource(stream);mrAnalyser=mrCtx.createAnalyser();mrAnalyser.fftSize=512;src.connect(mrAnalyser);
           var buf=new Uint8Array(mrAnalyser.fftSize);mrSilenceSince=0;var tStart=Date.now();
-          mrAnalyserOn=true;
+          mrAnalyserOn=(mrCtx.state==="running");
+          var mrCapSet=false;
           mrSilT=setInterval(function(){
             if(!mrAnalyser)return;
+            if(mrCtx&&mrCtx.state!=="running"){try{mrCtx.resume();}catch(e){}if(!mrCapSet&&Date.now()-tStart>1500){mrCapSet=true;mrAnalyserOn=false;setTimeout(stopRec,10000);}return;}
+            mrAnalyserOn=true;
             mrAnalyser.getByteTimeDomainData(buf);
             var sum=0;for(var j=0;j<buf.length;j++){var v=(buf[j]-128)/128;sum+=v*v;}
             var rms=Math.sqrt(sum/buf.length);
@@ -735,7 +744,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
         }
       }catch(e){}
       mrMaxT=setTimeout(stopRec,20000);
-    }).catch(function(){mrBusy=false;finalFail();});
+    }).catch(function(err){mrBusy=false;gumDead=true;var nm=err&&err.name;if(nm==="NotAllowedError"||nm==="SecurityError"){if(sp17InApp()){sp17SafariAviso();return;}st("El iPhone no dio permiso al micrófono.");$("sp17note").textContent="Para permitirlo: toca «aA» en la barra de Safari, luego «Configuración del sitio web», Micrófono, Permitir, y toca el micrófono otra vez. Si estás dentro de otra app, abre MUSA en Safari.";$("sp17mic").className="";return;}if(err&&err.message==="gum-timeout"){if(sp17InApp()){sp17SafariAviso();return;}st("El micrófono no respondió.");$("sp17note").textContent="El micrófono tardó demasiado en activarse. Toca el micrófono para intentarlo de nuevo; si se repite, abre MUSA en Safari.";$("sp17mic").className="";return;}finalFail();});
   }
   function sendAudioTurn(blob){
     waiting=true;sp25Busy=true;$("sp17mic").className="";st("Entendiendo tu voz…");
@@ -791,7 +800,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
   window.__sp17after=function(){if(!active)return;waiting=false;setTimeout(listen,300);};
   window.__sp17speak=function(on){speaking=on;try{if(active){scr.className="open"+(on?" speaking":"");if(on)st("Hablando…");}}catch(e){}};
   setInterval(function(){if(active&&waiting&&!muted&&!speaking&&!sp25Busy){waiting=false;setTimeout(listen,400);}},2500);
-  function start(){active=true;muted=false;speaking=false;errs=0;lfast=0;route="sr";mrBusy=false;mrPermNote=false;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversación en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");if(sp17VoiceBlocked()){sp17SafariAviso();return;}listen();}
+  function start(){active=true;muted=false;speaking=false;errs=0;lfast=0;route=sp17IOS()?"rec":"sr";mrBusy=false;mrPermNote=false;prevVoice=SP16VOICE;prevMode=mode;SP16VOICE=true;if(mode!=="gemini"){mode="gemini";render();}face();$("sp17note").textContent=(prevMode!=="gemini")?"La conversación en vivo es con Gemini, el miembro en vivo de la casa; Muse y ChatGPT trabajan por el puente de textos. Todo lo hablado queda en el historial del chat.":"Todo lo hablado queda en el historial del chat.";scr.className="open";st("Llamada en vivo");if(sp17VoiceBlocked()){sp17SafariAviso();return;}listen();}
   function end(){lclear();stopRec();mrCleanup();mrBusy=false;active=false;waiting=false;muted=false;speaking=false;route="sr";SP16VOICE=prevVoice;try{if(rec)rec.stop();}catch(e){}try{speechSynthesis.cancel();}catch(e){}scr.className="";$("sp17mic").className="";var mb=$("sp17mute");if(mb)mb.textContent="Silenciar";}
   var pb=document.createElement("button");pb.type="button";pb.className="sp16gear";pb.innerHTML="<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>";pb.setAttribute("aria-label","Llamada en vivo");
   pb.addEventListener("click",start);head.appendChild(pb);
