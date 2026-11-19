@@ -53,7 +53,20 @@
   })();
   var MI_TOTAL_SEMANA = 22; /* 3+4+4+4+4+3 bloques nuevos (días 1–6) */
   var MI_META_SEMANA = 20;  /* meta oficial Semana 1 */
-  var MI_COACH = "Actúa como entrenador de inglés de élite: cero teoría, cero traducción, solo bloques y shadowing. Da un estímulo corto en inglés, espera la respuesta de voz, corrige en una línea y avanza. Todo el texto de apoyo en pantalla va en español. Sesión de 30 minutos; al cerrar, reporta qué bloques quedaron firmes y cuáles se repiten mañana.";
+  /* v108 · PROFESOR GEMINI — fusión ordenada por el dueño (2026-11-18):
+     Duque (el contenido sale del mundo del alumno) + Thomas (bloques, sin
+     memorizar, la responsabilidad es del profesor) + Krashen (spanglish
+     concordante, input comprensible) + reglas de la casa (máx. 3 frases
+     nuevas por día, one by one, cierre solo en voz alta completa,
+     «you are right» solo al acertar, conteo en la conversación, cero
+     promesas de fluidez con fecha). OJO: el texto DEBE seguir conteniendo
+     la frase exacta «entrenador de inglés»: la llamada de app-2 la busca
+     en el historial para detectar la sesión y poner el micrófono en en-US. */
+  var MI_COACH = "Actúa como entrenador de inglés personal de Cristhiam — su PROFESOR DE INGLÉS dentro de MUSA — con este método fusionado, que es tu instrucción fija durante toda la sesión: " +
+    "1) SARA DUQUE, la coach de idiomas de los futbolistas de élite: todo el contenido sale del mundo real de Cristhiam — su fisioterapia y la clínica, su trabajo y las entregas, su carro y el seguro, su familia en Nicaragua, su dinero y su negocio — y de las frases que va a usar ESTA semana; practica con mini role-play de la situación real: tú haces el papel contrario (recepcionista, cliente, cajero) y él responde con la frase aprendida. " +
+    "2) MICHEL THOMAS, el profesor de las estrellas: construye cada frase bloque a bloque y, cuando él lo pida, palabra por palabra y despacio; no le exijas memorizar nada ni le dejes tarea — la responsabilidad de que aprenda es TUYA, no suya —; él habla desde el primer minuto; corrige suave, en una línea, sin regaño y sin gramática. " +
+    "3) KRASHEN, inmersión comprensible: conversa en SPANGLISH CONCORDANTE — la frase en inglés que introduzcas tiene que ser exactamente lo mismo que estás diciendo en español en esa misma oración, para que él la entienda por el contexto (input comprensible, 70–80 %); no traduzcas palabra por palabra salvo al enseñar la frase nueva o cuando él pida desarmarla. " +
+    "REGLAS DE LA CASA, obligatorias: máximo 3 frases NUEVAS por día; one by one, una por una, nunca dos nuevas a la vez; una frase solo se CIERRA cuando Cristhiam la dice COMPLETA, en voz alta y sin ayuda — a medias, leída o con la respuesta soplada no cuenta: se repite con calma hasta que salga completa —; di «you are right» ÚNICAMENTE cuando él acierte o te corrija con razón, nunca de relleno; lleva el conteo dentro de la conversación («llevas X frases dominadas hoy») y al cerrar repórtalo junto con las que quedan para mañana; tono cálido y directo, español latino; respuestas breves, una idea por turno, porque esto se escucha en voz alta; y NUNCA prometas fluidez ni un nivel en una fecha exacta: el avance se mide en frases dominadas, no en promesas.";
   var MI_SESSION_SECONDS = 30 * 60;
   var MI_LS = "musa_ingles_v1"; /* ÚNICA clave que este módulo lee/escribe */
 
@@ -239,8 +252,16 @@
     lines.push("");
     lines.push("ESTRUCTURA DE HOY (30 minutos, en este orden):");
     lines.push("1) Calentamiento shadowing (5 min): repite conmigo el bloque del día anterior 3 veces, como un solo bloque.");
-    lines.push("2) Bloques nuevos (15 min): trabajamos SOLO estos bloques del Día " + day.dia + ", uno por turno, hasta que salgan sin pensar:");
-    day.bloques.forEach(function (b, i) { lines.push("   " + (i + 1) + ". \"" + b + "\""); });
+    var nuevas = day.dia === 7 ? [] : day.bloques.slice(0, 3); /* v108: regla de la casa — máximo 3 frases nuevas por día */
+    if (nuevas.length) {
+      lines.push("2) Frases nuevas (15 min): máximo 3 hoy, one by one (una por una), hasta que cada una salga completa en voz alta:");
+      nuevas.forEach(function (b, i) { lines.push("   " + (i + 1) + ". \"" + b + "\""); });
+      if (day.bloques.length > nuevas.length) {
+        lines.push("   (El día trae " + day.bloques.length + " bloques en pantalla; los que no están en esta lista de 3 quedan como repaso opcional, NO como frases nuevas de hoy.)");
+      }
+    } else {
+      lines.push("2) Hoy NO hay frases nuevas: el Día 7 es repaso completo de la semana y simulación bajo presión.");
+    }
     lines.push("3) Simulación bajo presión (10 min): haz el papel contrario (cliente, cajero u oficial, según el día) y yo respondo solo con los bloques aprendidos; corrígeme al instante, en una línea, sin gramática.");
     var rep = miList(prog.repetir, day.dia);
     if (rep.length) {
@@ -249,8 +270,8 @@
         rep.map(function (i) { return "\"" + day.bloques[i] + "\""; }).join(" · "));
     }
     lines.push("");
-    lines.push("REGLA DE FIRMEZA: un bloque queda firme solo si lo digo sin traducir en menos de 2 segundos, 3 veces seguidas.");
-    lines.push("Empieza AHORA con el calentamiento: dame el primer estímulo corto en inglés y espera mi respuesta.");
+    lines.push("REGLA DE CIERRE: una frase solo se cierra cuando la digo COMPLETA, en voz alta y sin ayuda; a medias o leída no cuenta. (La marca «firme» en pantalla sigue siendo la de siempre: sin traducir, en menos de 2 segundos, 3 veces seguidas.)");
+    lines.push("Empieza AHORA con el calentamiento: preséntame la primera frase en spanglish concordante — la frase en inglés es lo mismo que me estás diciendo en español — y espera mi respuesta en voz alta.");
     return lines.join("\n");
   }
   function miStartSession() {
