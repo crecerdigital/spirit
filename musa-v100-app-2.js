@@ -662,6 +662,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
    de ingles usa esta misma tuberia: el contexto de la sesion vive en el
    historial del chat y el audio se transcribe en el idioma que se hable. */
 /* v109 (2026-11-18): iOS entra directo por GRABACION (el reconocimiento de voz de iOS en vistas web no es confiable); getUserMedia con limite de 10 s y mensajes distintos segun la causa (permiso denegado / vista dentro de otra app / sin respuesta); el analizador de silencio solo manda si su contexto de audio esta corriendo — si iOS lo deja suspendido decide el tamano de la grabacion, porque antes se descartaba audio bueno y la llamada «no escuchaba»; deteccion de vista dentro de otra app por falta de «Version/» en el agente de usuario, con excepcion de la app instalada (standalone). */
+/* v110 (2026-11-18): el turno de audio de la llamada hereda la maquinaria del chat (que si funciona): reintentos con espera creciente ante 429/503 de Google honrando Retry-After, rotacion por 4 modelos, presupuesto de 90 s y, si al final no hay respuesta, la pantalla muestra la causa real que devolvio Google en vez del generico «No te escuche». */
 (function(){try{
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
   if(chat.parentNode!==document.body)document.body.appendChild(chat); /* v20: el chat cubre TODA la pantalla, como en Muse */
@@ -759,22 +760,38 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
       var instr="Estás en una llamada de voz en vivo dentro de MUSA. El siguiente audio es el dueño hablando (español o inglés). Responde SOLO con un JSON válido con dos campos: \"transcript\": lo que dijo el dueño, palabra por palabra, en su idioma original; \"reply\": tu respuesta conversacional, breve y natural, lista para leerse en voz alta, sin markdown ni listas. Si el historial muestra una sesión de práctica de inglés en curso, sigue como su entrenador de inglés con el método de la casa (v108): reply en spanglish concordante — la frase en inglés que introduzcas es exactamente lo mismo que estás diciendo en español —, una sola frase por turno, corrección suave en una línea, y la frase solo se cierra si él la dice completa; ve contando en voz alta las frases que domina. Si el audio no se entiende, deja transcript vacío y en reply pide amablemente que lo repita.";
       ctx.push({role:"user",parts:[{text:instr},{inlineData:{mimeType:mime,data:b64}}]});
       var SYS="Eres Gemini, asistente del equipo de Crecer Digital. Tu jefa es Muse. Estás en una llamada de voz: respuestas breves, cálidas y directas.";
-      var list=models.slice(0,3),idx=0;
+      var list=models.slice(0,4),idx=0,lastStA=0,lastErrA="";
+      var delaysA=[1000,2000,4000],diA=0,mrA=0;
       function fail(stCode){
         mrBusy=false;sp25Busy=false;waiting=false;
         if(stCode===401||stCode===403){st("Google no aceptó la llave guardada. Pégala de nuevo en Ajustes y vuelve a intentarlo.");$("sp17mic").className="";return;}
         if(stCode===400){st("Google no aceptó la llave guardada: no es válida. Pega en Ajustes (engranaje) la llave de Google — empieza con «AIza» — y vuelve a intentarlo.");$("sp17mic").className="";return;}
         if(stCode===-9){st("Tardé demasiado en entenderte: la conexión está lenta. Toca el micrófono para intentarlo de nuevo.");$("sp17mic").className="";return;}
-        finalFail();
+        if(lastStA===429||lastStA===503){st("Gemini está saturado ahora mismo (nivel gratis). Espera un minuto y toca el micrófono otra vez.");$("sp17mic").className="";if(lastErrA)$("sp17note").textContent="Google dijo: "+lastErrA;return;}
+        st("Gemini no pudo responder esta vez. Toca el micrófono para intentarlo de nuevo.");$("sp17mic").className="";if(lastErrA)$("sp17note").textContent="Google dijo: "+lastErrA;
       }
       var t0A=Date.now();
       function attempt(){
         if(idx>=list.length){fail(0);return;}
-        if(Date.now()-t0A>50000){fail(-9);return;}
+        if(Date.now()-t0A>90000){fail(-9);return;}
         if(idx>0)st("Entendiendo tu voz… (otro intento)");
-        var m=list[idx++];
+        var m=list[idx];
         sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:ctx,generationConfig:{responseMimeType:"application/json"}})},30000).then(function(r){
-          if(!r.ok){if(r.status===401||r.status===403){fail(r.status);return;}if(r.status===400){return r.text().then(function(et){if(/api.?key/i.test(et||"")){fail(400);return;}attempt();});}attempt();return;}
+          if(!r.ok){
+            lastStA=r.status;
+            if(r.status===401||r.status===403){fail(r.status);return;}
+            return r.text().then(function(et){
+              var em="";try{var ej=JSON.parse(et);em=(ej&&ej.error&&ej.error.message)||"";}catch(e){}
+              if(em)lastErrA=em.slice(0,140);
+              if(r.status===400){if(/api.?key/i.test(em)||/API_KEY_INVALID/.test(em)){fail(400);return;}idx++;mrA=0;attempt();return;}
+              if((r.status===429||r.status===503)&&mrA<3&&diA<delaysA.length&&(Date.now()-t0A)<75000){
+                mrA++;var ra=parseInt(r.headers.get("Retry-After")||"0",10);var wms=ra>0?Math.min(ra*1000,15000):Math.round(delaysA[diA]*(1+Math.random()*0.4));diA++;
+                st("Gemini saturado ("+m+"). Reintentando…");
+                setTimeout(attempt,wms);return;
+              }
+              idx++;mrA=0;attempt();
+            });
+          }
           return r.json();
         }).then(function(d){
           if(!d)return;
@@ -791,7 +808,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
           sp25Busy=false;
           st("Hablando…");
           sp16Speak(reply);
-        }).catch(function(){attempt();});
+        }).catch(function(){if(mrA<3&&(Date.now()-t0A)<75000){mrA++;setTimeout(attempt,1500);}else{idx++;mrA=0;attempt();}});
       }
       attempt();
     };
