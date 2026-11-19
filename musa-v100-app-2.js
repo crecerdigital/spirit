@@ -664,6 +664,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
 /* v109 (2026-11-18): iOS entra directo por GRABACION (el reconocimiento de voz de iOS en vistas web no es confiable); getUserMedia con limite de 10 s y mensajes distintos segun la causa (permiso denegado / vista dentro de otra app / sin respuesta); el analizador de silencio solo manda si su contexto de audio esta corriendo — si iOS lo deja suspendido decide el tamano de la grabacion, porque antes se descartaba audio bueno y la llamada «no escuchaba»; deteccion de vista dentro de otra app por falta de «Version/» en el agente de usuario, con excepcion de la app instalada (standalone). */
 /* v110 (2026-11-18): el turno de audio de la llamada hereda la maquinaria del chat (que si funciona): reintentos con espera creciente ante 429/503 de Google honrando Retry-After, rotacion por 4 modelos, presupuesto de 90 s y, si al final no hay respuesta, la pantalla muestra la causa real que devolvio Google en vez del generico «No te escuche». */
 /* v111 (2026-11-18): leccion de la prueba real con llave desechable «prueba-musa» (proyecto MUSA-Pruebas, borrada tras la prueba): con una llave nueva y valida, Google rechazo el primer intento con el texto «API key not valid» y el reintento con la MISMA llave respondio bien — ese texto tambien sale por errores pasajeros o de acceso a un modelo, no solo por llave mala. La llamada ya no declara la llave invalida sin agotar la rotacion de modelos: el 400 con ese texto marca sospecha (keySuspectA) y rota; solo si todos los modelos lo devuelven se muestra el mensaje de llave. */
+/* v112 (2026-11-18, de noche, a su orden «resuelve eso»): el turno de audio deja el endpoint pesado :generateContent y pasa al MISMO endpoint del chat, que si respondio dos veces esa noche: :streamGenerateContent?alt=sse (se lee el flujo completo y se juntan los textos por evento). Ademas la grabacion baja a 24 kbps (voz), para que el audio suba mas ligero. En su iPhone la v111 llego a «Gemini saturado (gemini-flash-latest). Reintentando…»: saturacion del nivel gratis en hora pico, no llave ni telefono. */
 (function(){try{
   var chat=$("sp4chat"),head=chat.querySelector(".sp4head");
   if(chat.parentNode!==document.body)document.body.appendChild(chat); /* v20: el chat cubre TODA la pantalla, como en Muse */
@@ -713,7 +714,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
       mrStream=stream;
       var prefs=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
       mrMime="";for(var i=0;i<prefs.length;i++){try{if(MediaRecorder.isTypeSupported(prefs[i])){mrMime=prefs[i];break;}}catch(e){}}
-      try{mr=mrMime?new MediaRecorder(stream,{mimeType:mrMime}):new MediaRecorder(stream);}catch(e){try{mr=new MediaRecorder(stream);}catch(e2){mrBusy=false;mrCleanup();finalFail();return;}}
+      try{mr=new MediaRecorder(stream,mrMime?{mimeType:mrMime,audioBitsPerSecond:24000}:{audioBitsPerSecond:24000});}catch(e){try{mr=new MediaRecorder(stream);}catch(e2){mrBusy=false;mrCleanup();finalFail();return;}}
       if(mr.mimeType)mrMime=mr.mimeType;
       mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)mrChunks.push(ev.data);};
       mr.onstop=function(){
@@ -778,7 +779,7 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
         if(Date.now()-t0A>90000){fail(-9);return;}
         if(idx>0)st("Entendiendo tu voz… (otro intento)");
         var m=list[idx];
-        sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:ctx,generationConfig:{responseMimeType:"application/json"}})},30000).then(function(r){
+        sp24Fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:ctx,generationConfig:{responseMimeType:"application/json"}})},45000).then(function(r){
           if(!r.ok){
             lastStA=r.status;
             if(r.status===401||r.status===403){fail(r.status);return;}
@@ -794,10 +795,26 @@ save=function(k,v){try{if(k===LS_G||k===LS_T||k===LS_P){idbSet(k,v);try{localSto
               idx++;mrA=0;attempt();
             });
           }
-          return r.json();
-        }).then(function(d){
-          if(!d)return;
-          var txt="";try{var ps=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];for(var i=0;i<ps.length;i++)txt+=ps[i].text||"";}catch(e){}
+          return r.text();
+        }).then(function(raw){
+          if(raw==null)return;
+          var txt="";
+          try{
+            var evs=String(raw).split(/\r?\n\r?\n/);
+            for(var ei=0;ei<evs.length;ei++){
+              var dlL=evs[ei].split(/\r?\n/).filter(function(l){return l.indexOf("data:")===0;}).map(function(l){return l.slice(5);});
+              if(!dlL.length)continue;
+              var dlJ=dlL.join("\n");
+              if(dlJ==="[DONE]")continue;
+              var objs=[],o2=null;try{o2=JSON.parse(dlJ);}catch(e){}
+              if(o2)objs.push(o2);
+              else{for(var li=0;li<dlL.length;li++){var ol=null;try{ol=JSON.parse(dlL[li]);}catch(e){}if(ol)objs.push(ol);}}
+              for(var oi=0;oi<objs.length;oi++){
+                var ps=(objs[oi].candidates&&objs[oi].candidates[0]&&objs[oi].candidates[0].content&&objs[oi].candidates[0].content.parts)||[];
+                for(var i=0;i<ps.length;i++)txt+=ps[i].text||"";
+              }
+            }
+          }catch(e){}
           txt=String(txt||"").replace(/^\s+|\s+$/g,"");
           var transcript="",reply="";
           if(txt){try{var o=JSON.parse(txt);transcript=String(o.transcript||"");reply=String(o.reply||"");}catch(e){reply=txt;}}
